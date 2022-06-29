@@ -62,14 +62,14 @@ class P5004A(VisaInstrument):
                            get_cmd='SOUR:POW?',
                            set_cmd='SOUR:POW {}',
                            unit='dBm',
-                           vals=Numbers(min_value=-70,
+                           vals=Numbers(min_value=-80,
                                         max_value=10))
 
         self.add_parameter(name='if_bandwidth',
                            label='IF Bandwidth',
                            get_parser=float,
-                           get_cmd='SENSe1:BANDwidth?',
-                           set_cmd='SENSe1:BANDwidth {}',
+                           get_cmd='SENSe:BANDwidth?',
+                           set_cmd='SENSe:BANDwidth {}',
                            unit='Hz')
 
         self.add_parameter('average_amount',
@@ -127,8 +127,8 @@ class P5004A(VisaInstrument):
         #####################################################
         self.add_parameter('electrical_delay',
                            label='Electrical delay',
-                           get_cmd='CALC1:CORRection:EDELay:TIME?',
-                           set_cmd='CALC1:CORR:EDEL:TIME {}',
+                           get_cmd='CALC:CORRection:EDELay:TIME?',
+                           set_cmd='CALC:CORR:EDEL:TIME {}',
                            get_parser=float,
                            set_parser=float,
                            unit='s',
@@ -146,8 +146,8 @@ class P5004A(VisaInstrument):
         
         self.add_parameter('clock_source',
                            label='Clock source',
-                           get_cmd='SENSe1:ROSCillator:SOURce?',
-                           set_cmd='SENSe1:ROSCillator:SOURce {}',
+                           get_cmd='SENSe:ROSCillator:SOURce?',
+                           set_cmd='SENSe:ROSCillator:SOURce {}',
                            get_parser=str,
                            set_parser=str,
                            vals=Enum('int', 'Int', 'INT',
@@ -158,7 +158,7 @@ class P5004A(VisaInstrument):
         self.add_parameter(name='start_freq',
                            label='Start Frequency',
                            get_parser=float,
-                           get_cmd='SENS1:FREQ:STAR?',
+                           get_cmd='SENS:FREQ:STAR?',
                            set_cmd=self._set_start,
                            unit='Hz',
                            vals=Numbers(min_value=10e4,
@@ -167,7 +167,7 @@ class P5004A(VisaInstrument):
         self.add_parameter(name='stop_freq',
                            label='Stop Frequency',
                            get_parser=float,
-                           get_cmd='SENS1:FREQ:STOP?',
+                           get_cmd='SENS:FREQ:STOP?',
                            set_cmd=self._set_stop,
                            unit='Hz',
                            vals=Numbers(min_value=10e4 + 1,
@@ -176,7 +176,7 @@ class P5004A(VisaInstrument):
         self.add_parameter(name='center_freq',
                            label='Center Frequency',
                            get_parser=float,
-                           get_cmd='SENS1:FREQ:CENT?',
+                           get_cmd='SENS:FREQ:CENT?',
                            set_cmd=self._set_center,
                            unit='Hz',
                            vals=Numbers(min_value=10e4 + 1,
@@ -185,7 +185,7 @@ class P5004A(VisaInstrument):
         self.add_parameter(name='span',
                            label='Frequency Span',
                            get_parser=float,
-                           get_cmd='SENS1:FREQ:SPAN?',
+                           get_cmd='SENS:FREQ:SPAN?',
                            set_cmd=self._set_span,
                            unit='Hz',
                            vals=Numbers(min_value=1,
@@ -195,7 +195,7 @@ class P5004A(VisaInstrument):
                            label='Number of points',
                            get_parser=int,
                            set_parser=int,
-                           get_cmd='SENS1:SWE:POIN?',
+                           get_cmd='SENS:SWE:POIN?',
                            set_cmd=self._set_npts,
                            unit='',
                            vals=Ints(min_value=2,
@@ -205,8 +205,8 @@ class P5004A(VisaInstrument):
                            label='Number of traces',
                            get_parser=int,
                            set_parser=int,
-                           get_cmd='CALC1:PAR:COUN?',
-                           set_cmd='CALC1:PAR:COUN {}',
+                           get_cmd='CALC:PAR:COUN?',
+                           set_cmd='CALC:PAR:COUN {}',
                            unit='',
                            vals=Ints(min_value=1,
                                      max_value=16))
@@ -254,6 +254,10 @@ class P5004A(VisaInstrument):
         
         # start fresh
         self.device_vna.write('CALCulate:PARameter:DELete:ALL')
+        self.device_vna.query("*OPC?")
+        self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", S21")
+        self.device_vna.query("*OPC?")
+        self.device_vna.write("DISP:MEAS:FEED 1")
         print("Startup finished")
 
         
@@ -269,9 +273,12 @@ class P5004A(VisaInstrument):
                     type_of_sweep: str,
                     el_delay = 52.90 # in ns
                     ):
-            # The main function. Depending on type_of_sweep, the first and second values are start/stop or center/span resp.
-            # This value can be either "ss" (start stop) or "cs" (center span)
-            # we only do S21's, and we mainly only use a single channel
+           
+        ''' 
+        The main function. Depending on type_of_sweep, the first and second values are start/stop or center/span resp.
+        This value can be either "ss" (start stop) or "cs" (center span)
+        we only do S21's, and we only use a single channel at once
+        '''
 
         ##### make sure the window is on
         self.device_vna.write("DISPlay:WINDow1:STATE ON")
@@ -317,15 +324,15 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:SWEep:TIME:AUTO ON') # usually best to have this on
         self.output('on')
         sleep(0.5) # give some time for the command queue to clear
-            #If you are looking at the analyser, then autoscale is always nice
+            #If you are looking at the VNAnalyser, then autoscale is always nice
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         
         ##### start the measurement
         self.write('SENSe1:AVERage:STATe ON')
         
-            #averaging should always be there, and it makes life easier when making the power sweep
-        if(average < 5):
-            average = 5
+            #averaging should always be > 0, and a natural number at that
+        if(average < 1):
+            average = 1
         average = round(average//1)
         self.write('SENSe1:AVERage:COUnt {}'.format(average))
         
@@ -350,13 +357,16 @@ class P5004A(VisaInstrument):
                   save_path: str, 
                   filename: str, 
                   temperature: float,
-                  return_data: False,
+                  added_attenuation = 0
                  ):    
-        # Path does not end in '\' !!
-        # made for Windows (does it matter?)
-
-        # read in the data, and send it to a file
-        # Usually comes right after the "measure" function
+        ''' Path does not end in '\' !!
+        made for Windows OS
+        
+        read in the data, and send it to a file
+        Usually comes right after the "measure" function
+        Filename is just the initial prefix - added text is freq, P, T in final filename
+        Added attenuation: att. of 20 dB extra is "-20 dB"
+        '''
         
         ###### if temperature is 0, then it means we are underrange of calibration and hence we set the T to 7ish mK
         if temperature == 0.0:
@@ -379,7 +389,6 @@ class P5004A(VisaInstrument):
 
         # read in IMAG
         self.write("CALCulate1:MEASure:FORM IMAG")
-        
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
         sleep(1.5)
@@ -391,8 +400,8 @@ class P5004A(VisaInstrument):
         stop_f_str =  str(round((stop_f/1e6)))
         
         # open output file and put data points into the file
-        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns \n frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)'.format( self.power(), temperature, round(self.if_bandwidth()), self.average_amount(), round(self.electrical_delay()*1e9, 2) )
-        file = open(fullpath + '_' + str(start_f_str) + 'MHz - ' + str(stop_f_str) + 'MHz_P' + str(self.power()) + 'dBm' +
+        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns \n frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)'.format( self.power() + added_attenuation, temperature, round(self.if_bandwidth()), self.average_amount(), round(self.electrical_delay()*1e9, 2) )
+        file = open(fullpath + '_' + str(start_f_str) + 'MHz - ' + str(stop_f_str) + 'MHz_P' + str(self.power() + added_attenuation) + 'dBm' +
                     '_T' + str(temperature) + 'mK' + 
                     '.csv',"w")
         file.write(header + '\n')
@@ -411,8 +420,6 @@ class P5004A(VisaInstrument):
         self.write("CALC:MEAS:FORM MLOG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         
-        if return_data = True:
-            return real, imag, S21_mag, S21_phase
       
     def powersweep(self, 
                    start_pwr: float, 
@@ -425,10 +432,15 @@ class P5004A(VisaInstrument):
                    if_bandwidth: float,
                    general_file_path: str, 
                    filename: str, 
-                   temperature: float
+                   temperature: float, 
+                   added_attenuation = 0,
+                   extra_average_factor = 1
                   ):
-        
-        # Power sweep, whilst also taking the data at every power point.
+        '''
+        If you want to do a powersweep, this is your function
+        added_attenuation: if you added 20 db Att, then this is "-20"
+        '''
+        # Power sweep, taking the data at every power point.
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
    
         ##### create an array with the values of power for each sweep
@@ -450,31 +462,99 @@ class P5004A(VisaInstrument):
         sleep(1)
         
         ##### do the stuff
+        itera = 0
         for power_value in sweeps:
             # To be changed how this scales! Probably should depend on the IF_bandwidth
-            print("Right now, we are measuring spectrum at {}dBm".format(power_value))
-            average = -4.5e-03 * power_value ** 3 - 7.0e-02 * power_value **2 - 6.5e-01 * power_value + 10
+            print("Right now, we are measuring the spectrum at {}dBm applied power. Value {}/{}.".format(power_value, itera+1, len(sweeps)) )
+          
+            average = 5.57846902e-05 * power_value ** 4 + 2.22722094e-03 * power_value ** 3 - 4.88449821e-02 * power_value ** 2 - 2.89754544e+00 * power_value - 1.80165131e+01
             # set to: 
             # 1200 avg at -70 dBm
             # 200      at -40
             # 30       at -20
             # 15       at -10
             
+            # with IFBW 1k:
+            # 750 avg  at -75 dBm
+            # 500      at -70 dBm
+            # 50       at -50 dBm
+            # 20       at -40 dBm
+            # 10       at -30 dBm
+            # Use a higher ~6 or so averaging factor if using low-post amplfication measurements
+            
+            average = extra_average_factor * average
+            # Note: due to rounding this can be a bit different than expected
+            if average < 5:
+                average = 5
             self.measure_S21(start_freq_or_center, stop_freq_or_span, 
                              points, power_value, average, if_bandwidth, type_of_sweep)
-            self.save_data(results_pth, filename, temperature)
+            self.save_data(results_pth, filename, temperature, added_attenuation)
+            itera += 1
            
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
-
         
-
-
         
+    def CW_measurement(self, 
+                       points: int,
+                       center_frequency: float,
+                       power_list: list,
+                       times_list: list,
+                       if_bandwidth: float,
+                       save_path: str, 
+                       filename: str,
+                       temperature: float,
+                       el_delay = 60.974,
+                       added_attenuation = 0
+                      ):
+        '''
+        Eldelay in ns, standard value is on inclusive room T amplifiers
+        added_attenuation: if you added 20 db Att, then this is "-20"
+        '''
+        fullpath = os.path.join(save_path, filename).replace(os.sep, '/')
+        
+        self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+        ## starting stuff 
+        self.write("CALC:MEAS:FORM UPHase")
+        self.write('SENSe1:AVERage:STATe OFF')
+        self.write("SENS:SWE:TYPE CW")
+                
+        self.write(f"SENSe1:FREQuency:CENTer {center_frequency}")
+        self.write(f"SENS:SWE:POIN {points}")
+        self.write(f'SENSe1:BANDwidth {if_bandwidth}')
+        self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+        
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
+        for time_v in times_list:
+            self.write(f'SENS:SWE:TIME {time_v}')
+            times = np.linspace(0, time_v, points)
             
-                         
-########################################################################################################################################
-########################################################################################################################################
-    
+            for power_v in power_list:
+                self.write(f'SOUR:POW1 {power_v}')
+                sleep(0.5)
+                self.write("INITiate:IMM")
+                #sleep(1) # cannot queue measurements without this badboy here, somehow
+                self.device_vna.query("*OPC?")
+                sleep(time_v)
+                phaseU = self.device_vna.query_ascii_values("CALC:MEAS:DATA:FDATA?")
+
+                header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, elec. delay = {} ns \n time [s], S21 (PhaseU)'.format( power_v + added_attenuation, temperature, BW, ED )
+                
+                file = open(fullpath  + '_P' + str(power_v + added_attenuation) + 'dBm' +'_t' + str(time_v) + 's' + '_T' + str(temperature) + 'mK' + '_f' + str(int(center_frequency)) + 'Hz'+ '.csv',"w")
+                file.write(header + '\n')
+                
+                count = 0
+                for i in times:
+                    file.write( str(i) + ',' + str(phaseU[count]) + '\n')
+                    count = count + 1
+                file.close()
+                        
+
+        
+        
     def reset_averages(self) -> None:
             """
             Resets average count to 0
@@ -586,3 +666,5 @@ class P5004A(VisaInstrument):
 
         return 20. * np.log10(np.abs(data))
 
+   
+        
