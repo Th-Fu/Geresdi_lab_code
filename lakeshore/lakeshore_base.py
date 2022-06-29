@@ -178,7 +178,7 @@ class BaseOutput(InstrumentChannel):
                            docstring='Duration during which temperature has to '
                                      'be within tolerance',
                            unit='s')
-        self.wait_equilibration_time(0.5)
+        self.wait_equilibration_time(2.5)
 
         self.add_parameter('blocking_t',
                            label='Setpoint value with blocking until it is '
@@ -240,10 +240,15 @@ class BaseOutput(InstrumentChannel):
         print(f'Setting output range to: {self.output_range()}')
         return self.output_range()
     
-    def set_range_from_temperature_adj(self, temperature_set: float, temperature_current: float, heating_time: int) -> str:
+    def set_range_from_temperature_adj(self, 
+                                       temperature_set: float, 
+                                       temperature_current: float, 
+                                       heating_time: int) -> str:
         """
         Sets the output range of this given heater from a given temperature.
-
+        adj because adjusted from base with a potential heating function - 
+        it didn't like a divide by zero before
+        
         The output range is determined by the limits given through the parameter
         `range_limits`. The output range is used for temperatures between
         the limits `range_limits[i-1]` and `range_limits[i]`; that is
@@ -372,6 +377,80 @@ class BaseOutput(InstrumentChannel):
                 time_enter_tolerance_zone = time_now
 
             time.sleep(wait_cycle_time)
+
+def wait_until_set_point_reached_forced(
+            self,
+            wait_cycle_time: float,
+            wait_tolerance: float,
+            wait_equilibration_time: float) -> None:
+        
+        """
+        You are forced here to add the values of cycle time, tolerance and equib
+        
+        This function runs a loop that monitors the value of the heater's
+        input channel until the read values is close to the setpoint value
+        that has been set before.
+
+        Note that if the setpoint value is in a different range,
+        this function may wait forever because that setpoint cannot be
+        reached within the current range.
+
+        Args:
+            wait_cycle_time: this time is being waited between the readings
+                (same as `wait_cycle_time` parameter)
+                
+            wait_tolerance: this value is used to determine if the reading
+                value is close enough to the setpoint value according to the
+                following formula:
+                `abs(t_reading - t_setpoint)/t_reading < wait_tolerance`
+                (same as `wait_tolerance` parameter)
+                
+            wait_equilibration_time: within this time, the reading value has to
+                stay within the defined tolerance in order for this function to
+                return (same as `wait_equilibration_time` parameter);
+        """
+        
+        wait_cycle_time = wait_cycle_time
+        tolerance = wait_tolerance
+        equilibration_time = wait_equilibration_time
+
+        active_channel_id = self.input_channel()
+        active_channel_name_on_instrument = (
+            self.root_instrument
+                .input_channel_parameter_values_to_channel_name_on_instrument[
+                active_channel_id
+            ]
+        )
+        active_channel = getattr(
+            self.root_instrument,
+            active_channel_name_on_instrument
+        )
+
+        if active_channel.units() != 'kelvin':
+            raise ValueError(f"Waiting until the setpoint is reached requires "
+                             f"channel's {active_channel._channel!r} units to "
+                             f"be set to 'kelvin'.")
+
+        t_setpoint = self.setpoint()
+
+        time_now = time.perf_counter()
+        time_enter_tolerance_zone = time_now
+
+        while (time_now - time_enter_tolerance_zone) < equilibration_time:
+            time_now = time.perf_counter()
+
+            t_reading = active_channel.temperature()
+
+            if abs(t_reading - t_setpoint) / t_reading > tolerance:
+                # Reset time_enter_tolerance_zone to time_now because we left
+                # the tolerance zone here (if we even were inside it)
+                time_enter_tolerance_zone = time_now
+
+            time.sleep(wait_cycle_time)
+            print(f" time now = {time_now}\n wait_cycle_time = {wait_cycle_time} \n setpoint = {t_setpoint} \n
+            tolerance = {wait_tolerance} with treading - tsetpoint/treading = {abs(t_reading - t_setpoint) / t_reading} \n wait_equib time = {wait_equilibration_time}")
+            
+            
 
 
 class BaseSensorChannel(InstrumentChannel):
