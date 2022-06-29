@@ -434,11 +434,13 @@ class P5004A(VisaInstrument):
                    filename: str, 
                    temperature: float, 
                    added_attenuation = 0,
-                   extra_average_factor = 1
+                   extra_average_factor = 1,
+                   user_results_folder = r'\power_sweep_results'
                   ):
         '''
         If you want to do a powersweep, this is your function
         added_attenuation: if you added 20 db Att, then this is "-20"
+        Example of user_results_folder: r'\power_sweep_results'
         '''
         # Power sweep, taking the data at every power point.
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
@@ -449,7 +451,7 @@ class P5004A(VisaInstrument):
 
         ##### create a new directory for the output to be put into
             # make this whatever you want it to be
-        results_folder = r'\power_sweep_results'
+        results_folder = user_results_folder
         results_pth = general_file_path + results_folder
         
         ##### It should not be a problem that there is already a folder with this name
