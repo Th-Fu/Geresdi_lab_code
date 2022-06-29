@@ -496,7 +496,7 @@ class P5004A(VisaInstrument):
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
         
         
-    def CW_measurement(self, 
+    def CW_measurement_UWphase(self, 
                        points: int,
                        center_frequency: float,
                        power_list: list,
