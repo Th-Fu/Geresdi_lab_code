@@ -96,7 +96,7 @@ class mw_switch_class(d5a_module):
             sleep(0.5)
             
     def enable_ramp_for_all(self):
-        '''I don't know why you'd need this function but it's there for ya!'''
+        '''Enables ramp for all DACS!'''
         for dac in self.dac_list:
             dac.ramping_enabled(False)
             
