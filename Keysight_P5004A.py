@@ -1,5 +1,6 @@
 # Made by Ivo Cools and Attila Geresdi, Geresdi group, Chalmers
 # Contact: cools@chalmers.se and Geresdi@chalmers.se (2022)
+# Updated regularly
 
 
 # Important with the P5004A: turn on "hislip" from the Network Analyser program. (system - system setup - remote interface)
