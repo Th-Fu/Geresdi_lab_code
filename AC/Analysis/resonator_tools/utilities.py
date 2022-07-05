@@ -47,7 +47,7 @@ class plotting(object):
 # 		ax3.legend()
 # 		plotallfig.suptitle("Raw data/ fit plot")
 # 		plt.show()
-	def plotall(self):
+	def plotall(self, fine_plot = False):
 		real = self.z_data_raw.real
 		imag = self.z_data_raw.imag
 		real2 = self.z_data_sim.real
