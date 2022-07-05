@@ -54,7 +54,7 @@ class plotting(object):
 		real2 = self.z_data_sim.real
 		imag2 = self.z_data_sim.imag
 		plt.subplot(221)
-		plt.plot(real,imag,label='rawdata')
+		plt.plot(real,imag,label='rawdataLOL')
 		plt.plot(real2,imag2,label='fit')
 		plt.xlabel('Re(S21)')
 		plt.ylabel('Im(S21)')
