@@ -48,6 +48,7 @@ class plotting(object):
 # 		plotallfig.suptitle("Raw data/ fit plot")
 # 		plt.show()
 	def plotall(self, fine_plot = False):
+        print("HEJ!")
 		real = self.z_data_raw.real
 		imag = self.z_data_raw.imag
 		real2 = self.z_data_sim.real
