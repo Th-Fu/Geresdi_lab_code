@@ -468,7 +468,7 @@ class P5004A(VisaInstrument):
         itera = 0
         for power_value in sweeps:
             # To be changed how this scales! Probably should depend on the IF_bandwidth
-            print("Right now, we are measuring the spectrum at {}dBm applied power. Value {}/{}.".format(power_value, itera+1, len(sweeps)) )
+            print("Right now, we are measuring the spectrum at {}dBm applied/inferred power. Value {}/{}.".format(power_value + added_attenuation, itera+1, len(sweeps)) )
           
             average = 5.57846902e-05 * power_value ** 4 + 2.22722094e-03 * power_value ** 3 - 4.88449821e-02 * power_value ** 2 - 2.89754544e+00 * power_value - 1.80165131e+01
             # set to: 
