@@ -2,6 +2,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def Watt2dBm(x):
     '''
     converts from units of watts to dBm
@@ -48,11 +49,11 @@ class plotting(object):
 #       plotallfig.suptitle("Raw data/ fit plot")
 #       plt.show()
     def plotall(self, fine_plot = False):
-        print('hellowwdddxxwdd---oooodhahahahahhahddfqwejajajajjaouiiii!!')
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
+        plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
         plt.subplot(221)
         plt.plot(real,imag,label='rawdataLOL')
         plt.plot(real2,imag2,label='fit')
@@ -89,6 +90,7 @@ class plotting(object):
     def plotcalibrateddata(self):
         real = self.z_data.real
         imag = self.z_data.imag
+        plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
         plt.subplot(221)
         plt.plot(real,imag,label='calib')
         plt.xlabel('Re(S21)')
@@ -109,6 +111,7 @@ class plotting(object):
     def plotrawdata(self):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
+        plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
         plt.subplot(221)
         plt.plot(real,imag,label='rawdata')
         plt.xlabel('Re(S21)')
@@ -122,6 +125,46 @@ class plotting(object):
         plt.subplot(223)
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='rawdata')
         plt.xlabel('f (GHz)')
+        plt.ylabel('arg(|S21|)')
+        plt.legend()
+        plt.show()
+        
+    def plot_fine(self, value_low, value_high):
+        if value_low > value_high:
+            value_high = valu
+            value_low = vals
+            value_low = np.copy(valu)
+            value_high = np.copy(vals)
+        real = self.z_data_raw.real
+        imag = self.z_data_raw.imag
+        real2 = self.z_data_sim.real
+        imag2 = self.z_data_sim.imag
+        
+        plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
+        plt.subplot(221)
+        cutoff_lw = np.argwhere(np.array(self.f_data)>value_low)[0][0]
+        cutoff_hgh = np.argwhere(np.array(self.f_data)<value_high)[:]
+        
+        print(self.f_data[cutoff_lw], self.f_data[cutoff_hgh[len(cutoff_hgh) - 1][0]])
+        plt.plot(real[cutoff_lw:cutoff_hgh[len(cutoff_hgh) - 1][0]],imag[cutoff_lw:cutoff_hgh[len(cutoff_hgh) - 1][0]],label='rawdata')
+        plt.plot(real2[cutoff_lw:cutoff_hgh[len(cutoff_hgh) - 1][0]],imag2[cutoff_lw:cutoff_hgh[len(cutoff_hgh) - 1][0]],label='fit')
+        plt.xlabel('Re(S21)')
+        plt.ylabel('Im(S21)')
+        plt.legend()
+        plt.subplot(222)
+  
+        plt.plot(self.f_data*1e-3,np.absolute(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-3,np.absolute(self.z_data_sim),label='fit')
+        plt.xlabel('f (kHz)')
+        plt.xlim(value_low*1e-3, value_high*1e-3)
+        plt.ylabel('|S21|')
+        plt.legend()
+        plt.subplot(223)
+    
+        plt.plot(self.f_data*1e-3,np.angle(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-3,np.angle(self.z_data_sim),label='fit')
+        plt.xlabel('f (kHz)')
+        plt.xlim(value_low*1e-3, value_high*1e-3)
         plt.ylabel('arg(|S21|)')
         plt.legend()
         plt.show()
