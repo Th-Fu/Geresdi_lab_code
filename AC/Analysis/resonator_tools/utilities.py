@@ -48,26 +48,27 @@ class plotting(object):
 #       ax3.legend()
 #       plotallfig.suptitle("Raw data/ fit plot")
 #       plt.show()
-    def plotall(self, fine_plot = False):
+    def plotall(self, title= '', fine_plot = False):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
         plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
         plt.subplot(221)
-        plt.plot(real,imag,label='rawdataLOL')
+        plt.suptitle(title)
+        plt.plot(real,imag,label='raw data')
         plt.plot(real2,imag2,label='fit')
         plt.xlabel('Re(S21)')
         plt.ylabel('Im(S21)')
         plt.legend()
         plt.subplot(222)
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='fit')
         plt.xlabel('f (GHz)')
         plt.ylabel('|S21|')
         plt.legend()
         plt.subplot(223)
-        plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_sim),label='fit')
         plt.xlabel('f (GHz)')
         plt.ylabel('arg(|S21|)')
@@ -79,7 +80,7 @@ class plotting(object):
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='fit')
         plt.xlabel('f (GHz)')
         plt.ylabel('|S21|')
@@ -118,12 +119,12 @@ class plotting(object):
         plt.ylabel('Im(S21)')
         plt.legend()
         plt.subplot(222)
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data')
         plt.xlabel('f (GHz)')
         plt.ylabel('|S21|')
         plt.legend()
         plt.subplot(223)
-        plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='raw data')
         plt.xlabel('f (GHz)')
         plt.ylabel('arg(|S21|)')
         plt.legend()
@@ -153,7 +154,7 @@ class plotting(object):
         plt.legend()
         plt.subplot(222)
   
-        plt.plot(self.f_data*1e-3,np.absolute(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-3,np.absolute(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-3,np.absolute(self.z_data_sim),label='fit')
         plt.xlabel('f (kHz)')
         plt.xlim(value_low*1e-3, value_high*1e-3)
@@ -161,7 +162,7 @@ class plotting(object):
         plt.legend()
         plt.subplot(223)
     
-        plt.plot(self.f_data*1e-3,np.angle(self.z_data_raw),label='rawdata')
+        plt.plot(self.f_data*1e-3,np.angle(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-3,np.angle(self.z_data_sim),label='fit')
         plt.xlabel('f (kHz)')
         plt.xlim(value_low*1e-3, value_high*1e-3)
