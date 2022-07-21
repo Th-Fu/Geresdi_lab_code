@@ -433,7 +433,8 @@ class P5004A(VisaInstrument):
                    if_bandwidth: float,
                    general_file_path: str, 
                    filename: str, 
-                   temperature: float, 
+                   temperature: float,
+                   live_temperature = False,
                    added_attenuation = 0,
                    extra_average_factor = 1,
                    user_results_folder = r'\power_sweep_results'
@@ -491,6 +492,8 @@ class P5004A(VisaInstrument):
                 average = 5
             self.measure_S21(start_freq_or_center, stop_freq_or_span, 
                              points, power_value, average, if_bandwidth, type_of_sweep)
+            if live_temperature:
+                temperature = eval(f"lake.ch06.temperature()")
             self.save_data(results_pth, filename, temperature, added_attenuation)
             itera += 1
            
