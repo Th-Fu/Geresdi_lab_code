@@ -48,6 +48,7 @@ class plotting(object):
 #       ax3.legend()
 #       plotallfig.suptitle("Raw data/ fit plot")
 #       plt.show()
+
     def plotall(self, title= '', fine_plot = False):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
@@ -74,6 +75,14 @@ class plotting(object):
         plt.ylabel('arg(|S21|)')
         plt.legend()
         plt.show()
+        plt.subplot(224)
+        plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_raw)),label='raw data')
+        plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_sim)),label='fit')
+        plt.xlabel('f (GHz)')
+        plt.ylabel('Unwrapped arg(|S21|)')
+        plt.legend()
+        plt.show()
+        plt.tight_layout()
         
     def plotfit(self):
         real = self.z_data_raw.real
