@@ -74,7 +74,6 @@ class plotting(object):
         plt.xlabel('f (GHz)')
         plt.ylabel('arg(|S21|)')
         plt.legend()
-        plt.show()
         plt.subplot(224)
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_raw)),label='raw data')
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_sim)),label='fit')
