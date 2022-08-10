@@ -255,8 +255,9 @@ class P5004A(VisaInstrument):
         
         # start fresh
         self.device_vna.write('CALCulate:PARameter:DELete:ALL')
+        sleep(0.25)
         self.device_vna.query("*OPC?")
-        self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", S21")
+        self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
         self.device_vna.query("*OPC?")
         self.device_vna.write("DISP:MEAS:FEED 1")
         print("Startup finished")
@@ -294,9 +295,10 @@ class P5004A(VisaInstrument):
         if self.device_vna.query('CALC:PAR:CAT:EXT?') != '"meas,S21"\n':
                 # sometimes the name is like "Ch1_S11_1, meas S21".. avoid this by deleting
             self.device_vna.write('CALCulate:PARameter:DELete:ALL')
-            self.device_vna.write('*WAI')
-            sleep(0.25)
+            self.device_vna.query('*OPC?')
             self.device_vna.write('CALCulate1:PARameter:DEFine:EXT \'meas\',S21')
+            self.device_vna.write('*WAI')
+            self.device_vna.query('*OPC?')
             self.device_vna.write('CALCulate1:PARameter:SELect \'meas\'')
             self.device_vna.write("*CLS")
             self.device_vna.write('DISPlay:WINDow1:TRACe1:FEED \'meas\'')
@@ -371,7 +373,7 @@ class P5004A(VisaInstrument):
         
         ###### if temperature is 0, then it means we are underrange of calibration and hence we set the T to 7ish mK
         if temperature == 0.0:
-            temperature = 7
+            temperature = 7.0
             
         ##### read in frequency
         start_f = float(self.start_freq())
@@ -443,6 +445,7 @@ class P5004A(VisaInstrument):
         If you want to do a powersweep, this is your function
         added_attenuation: if you added 20 db Att, then this is "-20"
         Example of user_results_folder: r'\power_sweep_results'
+        Live temperature lets you update the temperature for every point; uses channel 6
         '''
         # Power sweep, taking the data at every power point.
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
@@ -495,6 +498,7 @@ class P5004A(VisaInstrument):
             if live_temperature:
                 temperature = eval(f"lake.ch06.temperature()")
             self.save_data(results_pth, filename, temperature, added_attenuation)
+            sleep(2)
             itera += 1
            
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
