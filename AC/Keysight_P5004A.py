@@ -303,7 +303,7 @@ class P5004A(VisaInstrument):
             self.device_vna.write("*CLS")
             self.device_vna.write('DISPlay:WINDow1:TRACe1:FEED \'meas\'')
     
-            # Usually look at data with MLOG unit, most natural
+            # Usually look at data with MLOG unit
         self.write("CALC:MEAS:FORM MLOG")
             # clear the previous measurement by turning off the averaging - measurement sets averaging to a
             # minimal value
@@ -330,30 +330,30 @@ class P5004A(VisaInstrument):
             #If you are looking at the VNAnalyser, then autoscale is always nice
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         
+        ##### start the measurement
+        self.write('SENSe1:AVERage:STATe ON')
+        
             #averaging should always be > 0, and a natural number at that
         if(average < 1):
             average = 1
         average = round(average//1)
         self.write('SENSe1:AVERage:COUnt {}'.format(average))
         
-                ##### start the measurement by starting the averaging
-        self.write('SENSe1:AVERage:STATe ON')
-        
-        
         ##### Wait until the measurement is done. 
-        sleep(2.0) # cannot queue measurements without this badboy here, somehow
+        sleep(2) # cannot queue measurements without this badboy here, somehow
         self.write("*WAI")
         
             # we check here the status of the averaging every 5 seconds
-        sleepcounter = 0
         while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
             sleep(5)
-            sleepcounter += 5
-            if not sleepcounter % 25:
-                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+            self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
             
         cnt = 0
-        sleep(1.0)
+        while self.device_vna.query("*OPC?") != '+1\n':
+            print("Finishing measurement OR *OPC error if error! {}".format(cnt))
+            cnt+= 1
+            sleep(5)
+        sleep(1)
 
    
     def save_data(self, 
