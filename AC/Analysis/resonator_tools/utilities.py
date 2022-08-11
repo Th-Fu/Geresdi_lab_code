@@ -80,6 +80,7 @@ class plotting(object):
         plt.xlabel('f (GHz)')
         plt.ylabel('Unwrapped arg(|S21|)')
         plt.legend()
+        
         plt.show()
         plt.tight_layout()
         

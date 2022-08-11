@@ -25,6 +25,7 @@ from qcodes.instrument.parameter import (
     ParamRawDataType
 )
 
+from Geresdi_lab_code.lakeshore.Model_372 import Model_372
 
 
 
@@ -450,7 +451,12 @@ class P5004A(VisaInstrument):
         '''
         # Power sweep, taking the data at every power point.
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
-   
+        # First, do temperature stuff:
+        if live_temperature:
+            P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
+            P5004_heater = P5004_lake.sample_heater
+            P5004_lake.ch06.units('kelvin');
+            
         ##### create an array with the values of power for each sweep
         sweeps = np.linspace(start_pwr, end_pwr, amount_of_points)
         stepsize = sweeps[0] - sweeps[1]
@@ -496,8 +502,9 @@ class P5004A(VisaInstrument):
                 average = 5
             self.measure_S21(start_freq_or_center, stop_freq_or_span, 
                              points, power_value, average, if_bandwidth, type_of_sweep)
+                             
             if live_temperature:
-                temperature = eval(f"lake.ch06.temperature()")
+                temperature = P5004_lake.ch06.temperature()
             self.save_data(results_pth, filename, temperature, added_attenuation)
             sleep(2)
             itera += 1
