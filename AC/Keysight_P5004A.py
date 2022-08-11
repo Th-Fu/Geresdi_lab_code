@@ -348,8 +348,8 @@ class P5004A(VisaInstrument):
             # we check here the status of the averaging every 5 seconds
         sleepcounter = 0
         while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
-            sleep(5)
-            sleepcounter += 5
+            sleep(2.5)
+            sleepcounter += 2.5
             # Let us not average/ rescale too often
             if not sleepcounter % 25:
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
@@ -389,14 +389,14 @@ class P5004A(VisaInstrument):
         self.write("CALCulate1:MEASure:FORM REAL")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
-        sleep(1.5)
+        sleep(1)
         real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
 
         # read in IMAG
         self.write("CALCulate1:MEASure:FORM IMAG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
-        sleep(1.5)
+        sleep(1)
         imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
         
         fullpath = os.path.join(save_path, filename).replace(os.sep, '/')
@@ -506,7 +506,7 @@ class P5004A(VisaInstrument):
             if live_temperature:
                 temperature = P5004_lake.ch06.temperature()
             self.save_data(results_pth, filename, temperature, added_attenuation)
-            sleep(2)
+            sleep(0.5)
             itera += 1
            
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
