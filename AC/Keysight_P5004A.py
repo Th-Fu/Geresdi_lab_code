@@ -453,6 +453,7 @@ class P5004A(VisaInstrument):
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
         # First, do temperature stuff:
         if live_temperature:
+            P5004_lake.close()
             P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
             P5004_heater = P5004_lake.sample_heater
             P5004_lake.ch06.units('kelvin');
@@ -508,7 +509,8 @@ class P5004A(VisaInstrument):
             self.save_data(results_pth, filename, temperature, added_attenuation)
             sleep(0.5)
             itera += 1
-           
+        if live_temperature:
+            P5004_lake.close()
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
         
         
