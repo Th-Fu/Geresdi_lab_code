@@ -12,9 +12,10 @@ from qcodes import validators
 from functools import partial
 from typing import List, Optional
 
-from spirack.D5a_module import D5a_module as D5a_api
-from spi_rack.spi_module_base import spi_module_base
-from spi_rack.spi_rack import d5a_module
+import Geresdi_lab_code.AC
+from Geresdi_lab_code.AC.spirack.D5a_module import D5a_module as D5a_api
+from Geresdi_lab_code.AC.spi_rack.spi_module_base import spi_module_base
+from Geresdi_lab_code.AC.spi_rack.spi_rack import d5a_module
 
 
 ####################################################        

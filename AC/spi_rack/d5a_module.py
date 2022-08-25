@@ -14,8 +14,9 @@ from qcodes import validators
 from functools import partial
 from typing import List, Optional
 
-from spirack.D5a_module import D5a_module as D5a_api
-from spi_rack.spi_module_base import spi_module_base
+import Geresdi_lab_code.AC
+from Geresdi_lab_code.AC.spirack.D5a_module import D5a_module as D5a_api
+from Geresdi_lab_code.AC.spi_rack.spi_module_base import spi_module_base
 
 
 class dummy_d5a_api:
@@ -311,7 +312,7 @@ class d5a_dac_channel(InstrumentChannel):
                            unit='V',
                            set_cmd=False,
                            get_cmd=partial(self._api.get_stepsize, dac),
-                           docstring="Returns the smallest current step allowed by the dac for the current settings."
+                           docstring="Returns the smallest current step allowed by the dac for the current settings; usually 4V/(2^18)"
                            )
         self.add_parameter('dac_channel',
                            set_cmd=False,
