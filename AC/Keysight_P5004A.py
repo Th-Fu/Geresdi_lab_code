@@ -35,7 +35,9 @@ from Geresdi_lab_code.lakeshore.Model_372 import Model_372
 
 
 class P5004A(VisaInstrument):
-    def __init__(self, name: str, address: str, timeout: int = 1000, **kwargs):
+    P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
+    P5004_heater = P5004_lake.sample_heater
+    def __init__(self, name: str, address: str, timeout: int = 1000, **kwargs):            
         super().__init__(name= name,
                          address= address,
                          timeout= timeout,
@@ -261,8 +263,17 @@ class P5004A(VisaInstrument):
         self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
         self.device_vna.query("*OPC?")
         self.device_vna.write("DISP:MEAS:FEED 1")
+        
         print("Startup finished")
-
+        
+    def connect_lakeshore(self):
+        P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
+        P5004_heater = P5004_lake.sample_heater
+        self.P5004_lake = P5004_lake
+        self.P5004_heater =  P5004_heater
+    def disconnect_lakeshore(self):
+        P5004_lake = self.P5004_lake
+        P5004_lake.close()
         
 #      Add perhaps something as a safety under user interaction when cancelling measurement
 
@@ -453,9 +464,7 @@ class P5004A(VisaInstrument):
         # Adjusted from https://github.com/Boulder-Cryogenic-Quantum-Testbed/measurement/.../self_control/self_control.py
         # First, do temperature stuff:
         if live_temperature:
-            P5004_lake.close()
-            P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
-            P5004_heater = P5004_lake.sample_heater
+            P5004_lake = self.P5004_lake
             P5004_lake.ch06.units('kelvin');
             
         ##### create an array with the values of power for each sweep
@@ -509,8 +518,6 @@ class P5004A(VisaInstrument):
             self.save_data(results_pth, filename, temperature, added_attenuation)
             sleep(0.5)
             itera += 1
-        if live_temperature:
-            P5004_lake.close()
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
         
         
@@ -572,7 +579,6 @@ class P5004A(VisaInstrument):
                     count = count + 1
                 file.close()
                         
-
         
         
     def reset_averages(self) -> None:
