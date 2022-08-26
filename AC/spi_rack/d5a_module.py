@@ -284,18 +284,20 @@ class d5a_dac_channel(InstrumentChannel):
         )
         self.add_parameter('ramp_rate',
                            unit='V/s',
-                           initial_value=100e-3,  # 10 mV/s
+                           initial_value=100e-3, 
                            docstring='Limits the rate at which currents can be changed. The size of of steps is still '
-                                     'limited by `ramp_max_step`.',
+                                     'limited by `ramp_max_step` RAMP RATE IS RAMP RATE * MAX STEP.',
                            parameter_class=ManualParameter
                            )
+                           
         self.add_parameter('ramp_max_step',
                            unit='V',
                            initial_value=100e-3,
                            docstring='Sets the maximum step size for voltage ramping. The rate at which it ramps is set'
-                                     ' by `ramp_rate`.',
+                                     ' by `ramp_rate`. ',
                            parameter_class=ManualParameter
                            )
+                           
         self.add_parameter('ramping_enabled',
                            initial_value=False,
                            vals=validators.Bool(),
@@ -308,6 +310,7 @@ class d5a_dac_channel(InstrumentChannel):
                            get_cmd=lambda: self._is_ramping,
                            set_cmd=False,
                            docstring="Returns whether the dac is currently in the process of ramping.")
+                           
         self.add_parameter('stepsize',
                            unit='V',
                            set_cmd=False,
