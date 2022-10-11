@@ -37,6 +37,7 @@ from Geresdi_lab_code.lakeshore.Model_372 import Model_372
 class P5004A(VisaInstrument):
     P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
     P5004_heater = P5004_lake.sample_heater
+    
     def __init__(self, name: str, address: str, timeout: int = 1000, **kwargs):            
         super().__init__(name= name,
                          address= address,
