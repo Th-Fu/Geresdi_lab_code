@@ -29,7 +29,7 @@ class circlefit(object):
         def residuals(p,x,y):
             theta0, Ql, fr, slope = p
             err = self._dist(y - (theta0+2.*np.arctan(2.*Ql*(1.-x/fr))-slope*x))
-            return err
+            return err -np.pi
         p0 = [theta0, Ql, fr, slope]
         p_final = spopt.leastsq(residuals,p0,args=(np.array(f_data),np.array(phase)))
         return p_final[0]
