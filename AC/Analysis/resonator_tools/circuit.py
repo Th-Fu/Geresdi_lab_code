@@ -91,14 +91,14 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
         return delay, params
 
 
-    def do_calibration(self, f_data, z_data, ignoreslope=True, guessdelay=True, fixed_delay=None, highQi = False):
+    def do_calibration(self, f_data, z_data, ignoreslope=True, guessdelay=True, fixed_delay=None):
         '''
         calculating parameters for normalization
         '''
-        if highQi:
-            delay, params = self.manual_fit_phase(f_data, z_data, delay=fixed_delay, ignoreslope=ignoreslope, guesses=None)
-        else:
-            delay, params = self.get_delay(f_data, z_data, ignoreslope=ignoreslope, guess=guessdelay, delay=fixed_delay)
+        # if highQi:
+        #     delay, params = self.manual_fit_phase(f_data, z_data, delay=fixed_delay, ignoreslope=ignoreslope, guesses=None)
+        #else:
+        delay, params = self.get_delay(f_data, z_data, ignoreslope=ignoreslope, guess=guessdelay, delay=fixed_delay)
         z_data = (z_data - params[1] * (f_data - params[4])) * np.exp(2. * 1j * np.pi * delay * f_data)
         xc, yc, r0 = self._fit_circle(z_data)
         zc = np.complex(xc, yc)
@@ -168,7 +168,7 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
         return results
 
 
-    def autofit(self, electric_delay=None, fcrop=None, highQi = False):
+    def autofit(self, electric_delay=None, fcrop=None):
         '''
         automatic calibration and fitting
         electric_delay: set the electric delay manually
@@ -186,7 +186,7 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
                                 ignoreslope=True,
                                 guessdelay=False,
                                 fixed_delay=electric_delay,
-                                highQi = highQi)
+                                )
         self.z_data = self.do_normalization(self.f_data, self.z_data_raw, delay, amp_norm, alpha, A2, frcal)
         self.fitresults = self.circlefit(self.f_data[self._fid], self.z_data[self._fid], fr, Ql, refine_results=False,
                                          calc_errors=True)
@@ -466,15 +466,15 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
                        fixed_delay=None,
                        ignoreslope=True,
                        guesses=None, guessdelay = True,
-                       highQi = False):
+                       ):
         '''
         calculating parameters for normalization
         '''
-        if highQi:
-            delay, params = self.manual_fit_phase(f_data, z_data, delay=fixed_delay, ignoreslope=ignoreslope,
-                                                  guesses=None)
-        else:
-            delay, params = self.get_delay(f_data, z_data, ignoreslope=ignoreslope, guess=guessdelay, delay=fixed_delay)
+        #if highQi:
+        #    delay, params = self.manual_fit_phase(f_data, z_data, delay=fixed_delay, ignoreslope=ignoreslope,
+        #                                          guesses=None)
+        #else:
+        delay, params = self.get_delay(f_data, z_data, ignoreslope=ignoreslope, guess=guessdelay, delay=fixed_delay)
         z_data = (z_data - params[1] * (f_data - params[4])) * np.exp(2. * 1j * np.pi * delay * f_data)
         xc, yc, r0 = self._fit_circle(z_data)
         zc = np.complex(xc, yc)
@@ -503,34 +503,45 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
     def circlefit(self, f_data, z_data, fr=None, Ql=None,
                   refine_results=False,
                   calc_errors=True,
-                  fit = 'DCM'):
+                  fit_type = 'DCM'):
         '''
         S11 version of the circlefit
         '''
 
         if fr is None: fr = f_data[np.argmin(np.absolute(z_data))]
-        if Ql is None: Ql = 1e6
+        if Ql is None: Ql = 1e4
         xc, yc, r0 = self._fit_circle(z_data, refine_results=refine_results)
-        phi0 = np.arcsin(yc / r0)
-        print(f"yc = {yc}, r0 = {r0}")
-        self.phi = phi0
+        #phi0 = -np.arcsin(yc / r0) Original
+        # phi0 = np.arcsin(yc / r0) Correct (?) adjustment
+        phi0 = np.arctan(yc / (xc + 1))
+        # print(f"yc = {yc}, xc = {xc},  r0 = {r0}")
+        if xc < -1:
+            self.phi = phi0 + np.pi
+        else:
+            self.phi = phi0
         theta0 = self._periodic_boundary(-phi0 + np.pi, np.pi)
+
         z_data_corr = self._center(z_data, np.complex(xc, yc))
         theta0, Ql, fr = self._phase_fit(f_data, z_data_corr, theta0, Ql, fr)
         # print("Ql from phasefit is: " + str(Ql))
-        if fit == 'phi':
-            Qi = Ql / (1. - r0)
-            Qc = 1. / (1. / Ql - 1. / Qi)
-            #Qc = Ql / (r0)
-            #Qi = 1. / (1. / Ql - 1/ Qc)
-        if fit == 'DCM':
+
+        if fit_type == 'DCM':
+            #print("Doing DCM fit")
             #Qi = Ql / (1. - r0)
             #Qc = 1. / (1. / Ql - 1. / Qi)
             Qc = Ql / (r0)
             Qc_complex = Qc * np.exp(np.complex(0, phi0))
-            print(1/Qc)
-            print(1/Qc_complex)
+            #print(1/Qc)
+            #print(1/Qc_complex)
             Qi = 1. / (1. / Ql - np.real(1/ Qc_complex))
+
+        else:
+            #print("Doing phi CM fit")
+            Qi = Ql / (1. - r0)
+            Qc = 1. / (1. / Ql - 1. / Qi)
+            #Qc = Ql / (r0)
+            #Qi = 1. / (1. / Ql - 1/ Qc)
+
         results = {"Qi": Qi, "Qc": Qc, "Ql": Ql, "fr": fr, "theta0": theta0}
 
         # calculation of the error
@@ -562,11 +573,13 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
 
         return results
 
-    def autofit(self, electric_delay=None, fcrop=None, manual_calibrate = True, highQi = True):
+    def autofit(self, electric_delay=None, fcrop=None, manual_calibrate = True,  fit_type = 'DCM'):
         '''
         automatic calibration and fitting
+        Manual calibrate works best with a lot of delay AND when Qi > Qc
         electric_delay: set the electric delay manually
         fcrop = (f1,f2) : crop the frequency range used for fitting
+
         '''
         if fcrop is None:
             self._fid = np.ones(self.f_data.size, dtype=bool)
@@ -579,6 +592,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
                 self._manual_calibrate(self.f_data[self._fid], self.z_data_raw[self._fid], ignoreslope=True,
                                        guessdelay=False, fixed_delay=electric_delay)
             #print(delay, amp_norm, alpha, fr, Ql, A2,)
+
         else:
             delay, amp_norm, alpha, fr, Ql, A2, frcal = \
                 self.do_calibration(self.f_data[self._fid],
@@ -586,11 +600,12 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
                                     ignoreslope=True,
                                     guessdelay=False,
                                     fixed_delay=electric_delay,
-                                    highQi=highQi)
-            print( amp_norm, alpha, delay, fr, Ql, A2 )
+                                    )
+            #print( amp_norm, alpha, delay, fr, Ql, A2 )
+
         self.z_data = self.do_normalization(self.f_data, self.z_data_raw, delay, amp_norm, alpha, A2, frcal)
         self.fitresults = self.circlefit(self.f_data[self._fid], self.z_data[self._fid], fr, Ql, refine_results=True,
-                                         calc_errors=True)
+                                         calc_errors=True, fit_type = fit_type)
         self.fitresults['delay'] = delay
         self.fitresults['a'] = amp_norm
         self.fitresults['alpha'] = alpha
@@ -608,7 +623,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         full model for notch type resonances
         '''
         phi = self.phi
-
+        #phi = np.pi-1
         complexQc = Qc * np.exp(-1j * phi)
         return a * np.exp(1j * (alpha - 2 * np.pi * f * delay)) * (
                 1. - 2. * Ql / (complexQc * 1 * (1. + 2j * Ql * (f / fr - 1.)))
@@ -855,7 +870,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         beta = self._periodic_boundary(theta + np.pi, np.pi)
         offrespoint = zc + self.r0 * np.cos(beta) + 1j * self.r0 * np.sin(beta)
         self.offrespoint = offrespoint
-        # print(f"offresspoint = {offrespoint}")
+        print(f"offresspoint = {offrespoint}")
         self.a = np.absolute(offrespoint)
         # self.alpha = np.angle(offrespoint)
         self.alpha = self._periodic_boundary(np.angle(offrespoint) + np.pi, np.pi)
@@ -990,7 +1005,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
 
 ########################################################################################################################
 ########################################################################################################################
-################
+
 
 class resonator(object):
     '''
