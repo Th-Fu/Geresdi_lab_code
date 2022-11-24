@@ -859,9 +859,10 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         z_data = self.z_data_raw * np.exp(2j * np.pi * self.delay * self.f_data)
         xc, yc, self.r0 = self._fit_circle(z_data)
         zc = complex(xc, yc)
+        #print(zc)
         z_data -= zc
 
-        print(xc, yc)
+        #print(xc, yc)
         # Find off-resonant point by fitting offset phase
         # (centered circle corresponds to lossless resonator in reflection)
         self.fr, self.Ql, theta, self.delay_remaining = self._fit_phase_x(z_data)
@@ -869,10 +870,11 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         # beta = self._periodic_boundary(theta - np.pi)
         beta = self._periodic_boundary(theta + np.pi, np.pi)
         offrespoint = zc + self.r0 * np.cos(beta) + 1j * self.r0 * np.sin(beta)
+        #offrespoint = (-1+0j)
         self.offrespoint = offrespoint
-        print(f"offresspoint = {offrespoint}")
+        #print(f"offresspoint = {offrespoint}")
         self.a = np.absolute(offrespoint)
-        # self.alpha = np.angle(offrespoint)
+        #self.alpha = np.angle(offrespoint) + np.pi
         self.alpha = self._periodic_boundary(np.angle(offrespoint) + np.pi, np.pi)
         # print(f"alpha = {self.alpha}")
         self.phi = self._periodic_boundary(beta - self.alpha, np.pi)
