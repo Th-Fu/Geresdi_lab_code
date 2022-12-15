@@ -80,35 +80,36 @@ class plotting(object):
         plt.xlabel('f (GHz)')
         plt.ylabel('Unwrapped arg(|S21|)')
         plt.legend()
-        
         plt.show()
         plt.tight_layout()
         
-    def plotfit(self, title= ''):
+    def plotfit(self, title= '', location = 'best'):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data', color = 'k')
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='fit', color = 'tab:green')
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='Experiment', color = 'tab:blue')
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='Fit', color = 'tab:green')
         plt.xlabel('f (GHz)')
         plt.ylabel('|S21|')
-        plt.legend()
+        plt.legend(loc = location)
         #plt.title("Magnitude fit")
         plt.title(title)
+        plt.tight_layout()
         plt.show()
 
-    def plotfitcircle(self, title= ''):
+    def plotfitcircle(self, title= '', location = 'best'):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
-        plt.plot(real,imag,label='raw data', color = 'k')
-        plt.plot(real2,imag2,label='fit', color = 'tab:green')
+        plt.plot(real,imag,label='Experiment', color = 'tab:blue')
+        plt.plot(real2,imag2,label='Fit', color = 'tab:green')
         plt.xlabel('Re(S21)')
         plt.ylabel('Im(S21)')
-        plt.legend()
+        plt.legend(loc = location)
         plt.title(title)
+        plt.tight_layout()
         plt.show()
 
     def plotcalibrateddata(self):
