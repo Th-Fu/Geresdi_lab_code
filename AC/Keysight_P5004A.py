@@ -528,7 +528,6 @@ class P5004A(VisaInstrument):
                        power_list: list,
                        times_list: list,
                        if_bandwidth: float,
-                       average:int,
                        save_path: str, 
                        filename: str,
                        temperature: float,
@@ -553,19 +552,7 @@ class P5004A(VisaInstrument):
         self.write(f"SENS:SWE:POIN {points}")
         self.write(f'SENSe1:BANDwidth {if_bandwidth}')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
-        
-        #vittorio start
-        self.write('SENSe1:AVERage:STATe OFF')        
-        
-                    #averaging should always be > 0, and a natural number at that
-        if(average < 1):
-            average = 1
-        average = round(average//1)
-        self.write('SENSe1:AVERage:COUnt {}'.format(average))
-             
-                ##### start the measurement by starting the averaging
-        self.write('SENSe1:AVERage:STATe ON')
-        #vittorio end
+       
         # reset at end
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
