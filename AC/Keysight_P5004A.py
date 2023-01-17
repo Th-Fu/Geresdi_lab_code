@@ -1,4 +1,4 @@
-# Made by Ivo Cools and Attila Geresdi, Geresdi group, Chalmers
+# Made by Ivo Cools and Attila Geresdi, Geresdi group, Chalmers. Good of them!
 # Contact: cools@chalmers.se and Geresdi@chalmers.se (2022)
 # Updated regularly
 
