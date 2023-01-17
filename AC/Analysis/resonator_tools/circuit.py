@@ -606,8 +606,8 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         '''
         automatic calibration and fitting
         Manual calibrate works best with a lot of delay AND when Qi >> Qc. Then, set electric delay DOES NOT DO ANYTHING.
-        fit_type has to get some extra love still
-        electric_delay: set the electric delay manually if man_calib = False
+        DO NOT CHANGE FIT_TYPE! Completely useless
+        electric_delay: set the electric delay manually ( if manual_calibrate = False only!!)
         fcrop = (f1,f2) : crop the frequency range used for fitting
         '''
 

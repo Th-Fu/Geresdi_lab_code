@@ -50,6 +50,7 @@ class plotting(object):
 #       plt.show()
 
     def plotall(self, title= ''):
+        #print(self.z_data_raw)
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
