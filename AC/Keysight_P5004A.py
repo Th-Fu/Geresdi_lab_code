@@ -441,6 +441,56 @@ class P5004A(VisaInstrument):
         self.write("CALC:MEAS:FORM MLOG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         
+    def get_data_Vitto(self,
+                        variables_ext = []
+                    ):    
+
+        ##### read in frequency
+        start_f = float(self.start_freq())
+        stop_f = float(self.stop_freq())
+        pts = int(self.npts())
+        freq = np.linspace(start_f, stop_f, pts)
+
+        ##### read in REAL
+            # may look funny because you literally read what's on the screen
+            # I did not manage for now to do it otherwise, but this works... without bugs for now!
+        self.write("CALCulate1:MEASure:FORM REAL")
+        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+        self.write("*WAI")
+        sleep(1)
+        real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+        # read in IMAG
+        self.write("CALCulate1:MEASure:FORM IMAG")
+        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+        self.write("*WAI")
+        sleep(1)
+        imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+                
+        S21_mag   = 10*np.log10( np.square(real) + np.square(imag))
+        S21_phase = np.arctan(np.divide(real,imag)* 180/np.pi)
+        count = 0
+        
+        data = []
+        
+        if( len( variables_ext ) != 0 ):
+            
+            for i in freq:
+                data.append( str( variables_ext )[ 1: -1] + ',' + str(i) + ',' + str(real[count]) + ',' + str(imag[count]) + ',' + str(S21_mag[count]) + ',' + str(S21_phase[count]) )
+                count = count + 1
+        else:
+        
+            for i in freq:
+                data.append( str(i) + ',' + str(real[count]) + ',' + str(imag[count]) + ',' + str(S21_mag[count]) + ',' + str(S21_phase[count]) )
+                count = count + 1
+        
+        # when we get data, we change the plot appearance, 
+        # so we change it back after data saving!
+        # it also is more intuitive to look at data this way
+        self.write("CALC:MEAS:FORM MLOG")
+        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                
+        return data
       
     def powersweep(self, 
                    start_pwr: float, 
