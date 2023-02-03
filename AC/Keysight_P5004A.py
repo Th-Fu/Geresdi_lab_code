@@ -749,7 +749,10 @@ class P5004A(VisaInstrument):
         self.write(f"SENS:SWE:POIN {points}")
         self.write(f'SENSe1:BANDwidth {if_bandwidth}')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
-       
+
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+
         # reset at end
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
