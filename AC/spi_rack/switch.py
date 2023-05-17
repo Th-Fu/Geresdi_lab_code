@@ -68,7 +68,7 @@ class mw_switch_class(d5a_module):
         
     def open_port(self, port: int):
         '''
-        Opens a single port - causing this port to float. Uses dac list for that.
+        Opens a single port - causing this port to be open and no connection to be there (any more). Uses dac list for that.
         '''
         # for numbering of ports, see Radiall R583423141 datasheet
         # just shuts of the voltage really
