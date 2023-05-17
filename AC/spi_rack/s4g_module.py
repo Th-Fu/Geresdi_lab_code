@@ -14,8 +14,8 @@ from qcodes import validators
 from functools import partial
 from typing import List, Optional
 
-from spirack.S4g_module import S4g_module as S4g_api
-from spi_rack.spi_module_base import spi_module_base
+from Geresdi_lab_code.AC.spirack.S4g_module import S4g_module as S4g_api
+from Geresdi_lab_code.AC.spi_rack.spi_module_base import spi_module_base
 
 
 class dummy_s4g_api:
