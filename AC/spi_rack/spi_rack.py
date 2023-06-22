@@ -11,11 +11,11 @@ from qcodes.instrument.base import Instrument
 
 from qblox_instruments import build
 
-from spirack.spi_rack import SPI_rack as spi_api
+from Geresdi_lab_code.AC.spirack.spi_rack import SPI_rack as spi_api
 
-from spi_rack.spi_module_base import spi_module_base, dummy_spi_module
-from spi_rack.s4g_module import s4g_module
-from spi_rack.d5a_module import d5a_module
+from Geresdi_lab_code.AC.spi_rack.spi_module_base import spi_module_base, dummy_spi_module
+from Geresdi_lab_code.AC.spi_rack.s4g_module import s4g_module
+from Geresdi_lab_code.AC.spi_rack.d5a_module import d5a_module
 
 
 class dummy_spi_api:
