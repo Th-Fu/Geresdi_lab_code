@@ -52,7 +52,7 @@ class mw_switch_class(d5a_module):
             print('By the way, resetting the switch\nWait atleast 6s!')
             self.reset_all_ports()
         else:
-            closed_port_list()
+            self.closed_port_list()
             
     def close_port(self, port: int):
         '''

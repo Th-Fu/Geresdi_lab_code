@@ -476,12 +476,12 @@ class P5004A(VisaInstrument):
         if( len( variables_ext ) != 0 ):
             
             for i in freq:
-                data.append( str( variables_ext )[ 1: -1] + ',' + str(i) + ',' + str(real[count]) + ',' + str(imag[count]) + ',' + str(S21_mag[count]) + ',' + str(S21_phase[count]) )
+                data.append( str( variables_ext )[ 1: -1] + ' ,' + str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
                 count = count + 1
         else:
         
             for i in freq:
-                data.append( str(i) + ',' + str(real[count]) + ',' + str(imag[count]) + ',' + str(S21_mag[count]) + ',' + str(S21_phase[count]) )
+                data.append( str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
                 count = count + 1
         
         # when we get data, we change the plot appearance, 
@@ -491,7 +491,7 @@ class P5004A(VisaInstrument):
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
                 
         return data
-      
+        # comment    
     def powersweep(self, 
                    start_pwr: float, 
                    end_pwr: float, 
@@ -505,6 +505,7 @@ class P5004A(VisaInstrument):
                    filename: str, 
                    temperature: float,
                    live_temperature = False,
+                   el_delay = 52.90, # in ns
                    added_attenuation = 0,
                    extra_average_factor = 1,
                    user_results_folder = r'\power_sweep_results'
@@ -528,9 +529,11 @@ class P5004A(VisaInstrument):
 
         ##### create a new directory for the output to be put into
             # make this whatever you want it to be
-        results_folder = user_results_folder
-        results_pth = general_file_path + results_folder
-        
+        if user_results_folder:
+            results_folder = user_results_folder
+            results_pth = general_file_path + results_folder
+        else:
+            results_pth = general_file_path
         ##### It should not be a problem that there is already a folder with this name
             # but the user should be told
         try: 
@@ -566,7 +569,7 @@ class P5004A(VisaInstrument):
             if average < 5:
                 average = 5
             self.measure_S21(start_freq_or_center, stop_freq_or_span, 
-                             points, power_value, average, if_bandwidth, type_of_sweep)
+                             points, power_value, average, if_bandwidth, type_of_sweep, el_delay)
                              
             if live_temperature:
                 temperature = P5004_lake.ch06.temperature()
@@ -588,7 +591,8 @@ class P5004A(VisaInstrument):
                    if_bandwidth: float, 
                    el_delay = 52,
                    added_attenuation = 0,
-                   variables_ext = []
+                   variables_ext = [],
+                   silent = False
                   ):
         '''
         If you want to do a powersweep, this is your function
@@ -637,7 +641,9 @@ class P5004A(VisaInstrument):
             data.append( self.get_data_Vitto( variables_ext + [ power_value + added_attenuation, np.round(average) ] ) )
             sleep(0.5)
             itera += 1
-        print("VNA power output sweeped from {}dBm to {}dBm".format(start_pwr, end_pwr ))        
+        
+        if silent == False:
+            print("VNA power output sweeped from {}dBm to {}dBm".format(start_pwr, end_pwr ))        
         
         return data
         
@@ -800,6 +806,152 @@ class P5004A(VisaInstrument):
             return up, re, im, uperr, reerr, imerr
 
 
+
+    def CW_measurement_UWphase_Vitto_2(self, 
+                   points: int,
+                   center_frequency: float,
+                   power_list: list,
+                   times_list: list,
+                   if_bandwidth: float,
+                   el_delay = 60.974
+                  ):
+        '''
+        Eldelay in ns, standard value is on inclusive room T amplifiers
+        added_attenuation: if you added 20 db Att, then this is "-20"
+        '''
+        
+        self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+        ## starting stuff 
+        self.write("CALC:MEAS:FORM UPHase")
+        self.write('SENSe1:AVERage:STATe OFF')
+        self.write("SENS:SWE:TYPE CW")
+                
+        self.write(f"SENSe1:FREQuency:CENTer {center_frequency}")
+        self.write(f"SENS:SWE:POIN {points}")
+        self.write(f'SENSe1:BANDwidth {if_bandwidth}')
+        self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+       
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
+        for time_v in times_list:
+            self.write(f'SENS:SWE:TIME {time_v}')
+            times = np.linspace(0, time_v, points)
+            
+            up, re, im, uperr, reerr, imerr = [], [], [], [], [], []
+            
+            for power_v in power_list:
+                
+                self.write("CALC:MEAS:FORM UPHase")
+                self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+                self.write(f'SOUR:POW1 {power_v}')
+                sleep(0.5)
+                
+                self.write("INITiate:IMM")
+                #sleep(1) # cannot queue measurements without this badboy here, somehow
+                self.device_vna.query("*OPC?")
+                sleep(time_v)
+                phaseU = self.device_vna.query_ascii_values("CALC:MEAS:DATA:FDATA?")
+
+                ##### read in REAL
+                    # may look funny because you literally read what's on the screen
+                    # I did not manage for now to do it otherwise, but this works... without bugs for now!
+                self.write("CALCulate1:MEASure:FORM REAL")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                sleep(0.5)
+                real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                # read in IMAG
+                self.write("CALCulate1:MEASure:FORM IMAG")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                sleep(0.5)
+                imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                up.append( np.mean( phaseU ) )
+                re.append( np.mean( real ) )
+                im.append( np.mean( imag ) )
+                uperr.append( np.std( phaseU ) )
+                reerr.append( np.std( real ) )
+                imerr.append( np.std( imag ) )                
+            return up, re, im, uperr, reerr, imerr
+
+    def CW_measurement_UWphase_Vitto_3(self, 
+                   points: int,
+                   center_frequency: float,
+                   power_list: list,
+                   times_list: list,
+                   if_bandwidth: float,
+                   el_delay = 60.974
+                  ):
+        '''
+        Eldelay in ns, standard value is on inclusive room T amplifiers
+        added_attenuation: if you added 20 db Att, then this is "-20"
+        '''
+        
+        self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+        ## starting stuff 
+        self.write("CALC:MEAS:FORM UPHase")
+        self.write('SENSe1:AVERage:STATe OFF')
+        self.write("SENS:SWE:TYPE CW")
+                
+        self.write(f"SENSe1:FREQuency:CENTer {center_frequency}")
+        self.write(f"SENS:SWE:POIN {points}")
+        self.write(f'SENSe1:BANDwidth {if_bandwidth}')
+        self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+       
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
+        for time_v in times_list:
+            self.write(f'SENS:SWE:TIME {time_v}')
+            times = np.linspace(0, time_v, points)
+            
+            up, re, im, uperr, reerr, imerr = [], [], [], [], [], []
+            
+            for power_v in power_list:
+                
+                self.write("CALC:MEAS:FORM UPHase")
+                self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+                self.write(f'SOUR:POW1 {power_v}')
+                #sleep(0.5)
+                
+                self.write("INITiate:IMM")
+                #sleep(1) # cannot queue measurements without this badboy here, somehow
+                self.device_vna.query("*OPC?")
+                sleep(time_v)
+                phaseU = self.device_vna.query_ascii_values("CALC:MEAS:DATA:FDATA?")
+
+                ##### read in REAL
+                    # may look funny because you literally read what's on the screen
+                    # I did not manage for now to do it otherwise, but this works... without bugs for now!
+                self.write("CALCulate1:MEASure:FORM REAL")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                #sleep(0.5)
+                real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                # read in IMAG
+                self.write("CALCulate1:MEASure:FORM IMAG")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                #sleep(0.5)
+                imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                up.append( np.mean( phaseU ) )
+                re.append( np.mean( real ) )
+                im.append( np.mean( imag ) )
+                uperr.append( np.std( phaseU ) )
+                reerr.append( np.std( real ) )
+                imerr.append( np.std( imag ) )                
+            return up, re, im, uperr, reerr, imerr
+
+
     def CW_measurement_UWphase_Vitto_avg(self, 
                    points: int,
                    center_frequency: float,
@@ -828,7 +980,10 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:SWEep:TIME:AUTO ON') # usually best to have this on
         self.output('on')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
-        
+                
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
         if(average < 1):
             average = 1
         average = round(average//1)
@@ -838,25 +993,6 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:AVERage:STATe ON')
         
         
-                ##### Wait until the measurement is done. 
-        sleep(2.0) # cannot queue measurements without this badboy here, somehow
-        self.write("*WAI") 
-
-            # we check here the status of the averaging every 5 seconds
-        sleepcounter = 0
-        while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
-            sleep(2.5)
-            sleepcounter += 2.5
-            print( self.device_vna.query("STAT:OPER:AVER1:COND?") )
-            # Let us not average/ rescale too often
-            if not sleepcounter % 25:
-                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
-        
-        
-       
-        # reset at end
-        self.write("TRIGger:SOURce MANual")
-        self.write('SENSe1:SWEep:TIME:AUTO OFF')
         for time_v in times_list:
             self.write(f'SENS:SWE:TIME {time_v}')
             times = np.linspace(0, time_v, points)
@@ -871,6 +1007,26 @@ class P5004A(VisaInstrument):
                 sleep(0.5)       
                                 
                 self.write("INITiate:IMM")
+                
+
+                
+                
+                        ##### Wait until the measurement is done. 
+                sleep(2.0) # cannot queue measurements without this badboy here, somehow
+                self.write("*WAI") 
+
+                    # we check here the status of the averaging every 5 seconds
+                #sleepcounter = 0
+                #while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
+                 #   sleep(2.5)
+                  #  sleepcounter += 2.5
+                   # print( self.device_vna.query("STAT:OPER:AVER1:COND?") )
+                    # Let us not average/ rescale too often
+                    #if not sleepcounter % 25:
+                     #   self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                
+                
+                
                 #sleep(1) # cannot queue measurements without this badboy here, somehow
                 self.device_vna.query("*OPC?")
                 sleep(time_v)
