@@ -739,16 +739,13 @@ class P5004A(VisaInstrument):
                    power_list: list,
                    times_list: list,
                    if_bandwidth: float,
-                   el_delay = 60.974
+                   el_delay = 60.974,
                   ):
         '''
         Eldelay in ns, standard value is on inclusive room T amplifiers
-        added_attenuation: if you added 20 db Att, then this is "-20"
+
         '''
-        
         self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
-        BW = round(self.if_bandwidth())
-        ED = round(self.electrical_delay()*1e9, 2)
         ## starting stuff 
         self.write("CALC:MEAS:FORM UPHase")
         self.write('SENSe1:AVERage:STATe OFF')
@@ -758,14 +755,17 @@ class P5004A(VisaInstrument):
         self.write(f"SENS:SWE:POIN {points}")
         self.write(f'SENSe1:BANDwidth {if_bandwidth}')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
-       
+
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+
         # reset at end
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
+
         for time_v in times_list:
             self.write(f'SENS:SWE:TIME {time_v}')
             times = np.linspace(0, time_v, points)
-            
             up, re, im, uperr, reerr, imerr = [], [], [], [], [], []
             
             for power_v in power_list:
@@ -963,12 +963,10 @@ class P5004A(VisaInstrument):
                   ):
         '''
         Eldelay in ns, standard value is on inclusive room T amplifiers
-        added_attenuation: if you added 20 db Att, then this is "-20"
+        points: amount on data points in one measurement
+        Average: amount of measurements to average
         '''
-        
         self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
-        BW = round(self.if_bandwidth())
-        ED = round(self.electrical_delay()*1e9, 2)
         ## starting stuff 
         self.write("CALC:MEAS:FORM UPHase")
         self.write('SENSe1:AVERage:STATe OFF')
@@ -980,10 +978,16 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:SWEep:TIME:AUTO ON') # usually best to have this on
         self.output('on')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+<<<<<<< HEAD
                 
         # reset at end
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
+=======
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+
+>>>>>>> aa8de3756bbdcb159d6bf1661fab44ede16b8d4b
         if(average < 1):
             average = 1
         average = round(average//1)
@@ -993,6 +997,27 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:AVERage:STATe ON')
         
         
+<<<<<<< HEAD
+=======
+                ##### Wait until the measurement is done. 
+        sleep(2.0) # cannot queue measurements without this badboy here, somehow
+        self.write("*WAI") 
+
+            # we check here the status of the averaging every 5 seconds
+        sleepcounter = 0
+        while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
+            sleep(2.5)
+            sleepcounter += 2.5
+            print( self.device_vna.query("STAT:OPER:AVER1:COND?") )
+            # Let us not average/ rescale too often
+            if not sleepcounter % 25:
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
+
+>>>>>>> aa8de3756bbdcb159d6bf1661fab44ede16b8d4b
         for time_v in times_list:
             self.write(f'SENS:SWE:TIME {time_v}')
             times = np.linspace(0, time_v, points)
