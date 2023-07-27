@@ -263,7 +263,7 @@ class P5004A(VisaInstrument):
             print("Open measurements:", measurements)
 
             # Add a new measurement 'ch1_S21'
-            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
+            self.device_vna.write("CALC:PAR:EXT 'ch1_S21_1', 'S21'")
             self.device_vna.query("*OPC?")
 
             # Delete the initial measurements 'CH1_S11_1' and 'S11' if they are present
