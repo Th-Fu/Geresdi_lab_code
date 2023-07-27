@@ -981,16 +981,15 @@ class P5004A(VisaInstrument):
         self.write('SENSe1:SWEep:TIME:AUTO ON') # usually best to have this on
         self.output('on')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
-<<<<<<< HEAD
+
                 
         # reset at end
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
-=======
+
         BW = round(self.if_bandwidth())
         ED = round(self.electrical_delay()*1e9, 2)
 
->>>>>>> aa8de3756bbdcb159d6bf1661fab44ede16b8d4b
         if(average < 1):
             average = 1
         average = round(average//1)
@@ -998,11 +997,9 @@ class P5004A(VisaInstrument):
         
                 ##### start the measurement by starting the averaging
         self.write('SENSe1:AVERage:STATe ON')
-        
-        
-<<<<<<< HEAD
-=======
-                ##### Wait until the measurement is done. 
+
+
+        ##### Wait until the measurement is done.
         sleep(2.0) # cannot queue measurements without this badboy here, somehow
         self.write("*WAI") 
 
@@ -1020,7 +1017,6 @@ class P5004A(VisaInstrument):
         self.write("TRIGger:SOURce MANual")
         self.write('SENSe1:SWEep:TIME:AUTO OFF')
 
->>>>>>> aa8de3756bbdcb159d6bf1661fab44ede16b8d4b
         for time_v in times_list:
             self.write(f'SENS:SWE:TIME {time_v}')
             times = np.linspace(0, time_v, points)
