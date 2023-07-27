@@ -427,16 +427,16 @@ class P5004A(VisaInstrument):
         fullpath = os.path.join(save_path, filename).replace(os.sep, '/')
 
         # Open output file and put data points into the file
-        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns'.format(
+        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns\n'.format(
             self.power() + added_attenuation, temperature, round(self.if_bandwidth()), self.average_amount(),
             round(self.electrical_delay() * 1e9, 2)
         )
 
         if custom_header:
             custom_header_str = ', '.join(custom_header)
-            header += "\n" + custom_header_str
+            header += custom_header_str + ', '
 
-        header += "\nFrequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)"
+        header += "Frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)"
 
         if prefixes_with_values:
             file = open(fullpath + '.csv', "w")
