@@ -396,15 +396,74 @@ class P5004A(VisaInstrument):
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         sleep(0.5)
 
-   
-    def save_data(self, 
-                  save_path: str, 
-                  filename: str, 
+
+    def save_data(self,
+                  save_path: str,
+                  filename: str,
                   temperature: float,
-                  added_attenuation = 0,
-                  prefixes_with_values = False
-                 ):    
-        ''' Path does not end in '\' !!
+                  added_attenuation=0,
+                  prefixes_with_values=False,
+                  variables_ext=[]
+                  ):
+        '''
+        Path does not end in '\' !!
+        made for Windows OS
+
+        read in the data, and send it to a file
+        Usually comes right after the "measure" function
+        save_path is a string for the file path
+        Filename is just the initial prefix - added text is freq, P, T in final filename
+        Added attenuation: att. of 20 dB extra is "-20 dB"
+        '''
+
+        ###### if temperature is 0, then it means we are underrange of calibration and hence we set the T to 7ish mK
+        if temperature == 0.0:
+            temperature = 7.0
+
+        # Call get_data function to get the data to be saved
+        data_to_save = self.get_data(variables_ext)
+        fullpath = os.path.join(save_path, filename).replace(os.sep, '/')
+
+        # Open output file and put data points into the file
+        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns \n frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)'.format(
+            self.power() + added_attenuation, temperature, round(self.if_bandwidth()), self.average_amount(),
+            round(self.electrical_delay() * 1e9, 2)
+        )
+
+        if prefixes_with_values:
+            file = open(fullpath + '.csv', "w")
+
+        else:
+            # for some nice naming, considering usually we measure in GHz - we round on MHz
+            start_f_str = str(round((self.start_freq() / 1e6)))
+            stop_f_str = str(round((self.stop_freq() / 1e6)))
+            file = open(fullpath + '_' + str(start_f_str) + 'MHz - ' + str(stop_f_str) + 'MHz_P' + str(
+                self.power() + added_attenuation) + 'dBm' + '_T' + str(temperature) + 'mK' + '.csv', "w")
+
+        file.write(header + '\n')
+
+        # Write the data to the file
+        for line in data_to_save:
+            file.write(line + '\n')
+
+        file.close()
+
+        # when we save data, we change the plot appearance,
+        # so we change it back after data saving!
+        # it also is more intuitive to look at data this way
+        self.write("CALC:MEAS:FORM MLOG")
+        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+        self.write("*WAI")
+
+    def save_data_old(self,
+                  save_path: str,
+                  filename: str,
+                  temperature: float,
+                  added_attenuation=0,
+                  prefixes_with_values=False
+                  ):
+        '''
+        Path does not end in '\' !!
         made for Windows OS
         
         read in the data, and send it to a file
