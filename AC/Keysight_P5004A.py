@@ -251,22 +251,25 @@ class P5004A(VisaInstrument):
         VISApath = r'C:\Program Files\IVI Foundation\VISA\Win64\agvisa\agbin\visa32.dll'
         rm = visa.ResourceManager(VISApath)
         self.device_vna = rm.open_resource(address)
-        # self.device_vna = rm.open_resource('TCPIP0::DHCP2-100217::hislip_PXI10_CHASSIS1_SLOT1_INDEX0::INSTR')
-        # Query identification string *IDN?
-        self.device_vna.query("*IDN?")
-        self.device_vna.query("SYST:ERR?")
-        self.device_vna.write("*CLS")
-        
-        # start fresh
-        self.device_vna.write('CALCulate:PARameter:DELete:ALL')
-        sleep(0.25)
-        self.device_vna.query("*OPC?")
-        self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
-        self.device_vna.query("*OPC?")
-        self.device_vna.write("DISP:MEAS:FEED 1")
-        
-        print("Startup finished")
-        
+        try:
+            print('test')
+            # self.device_vna = rm.open_resource('TCPIP0::DHCP2-100217::hislip_PXI10_CHASSIS1_SLOT1_INDEX0::INSTR')
+            # Query identification string *IDN?
+            self.device_vna.query("*IDN?")
+            self.device_vna.query("SYST:ERR?")
+            self.device_vna.write("*CLS")
+
+            # start fresh
+            self.device_vna.write('CALCulate:PARameter:DELete:ALL')
+            sleep(0.25)
+            self.device_vna.query("*OPC?")
+            self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
+            self.device_vna.query("*OPC?")
+            self.device_vna.write("DISP:MEAS:FEED 1")
+
+            print("Startup finished")
+        except visa.VisaIOError as e:
+            print(f"An error occurred: {e}")
     def connect_lakeshore(self):
         P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
         P5004_heater = P5004_lake.sample_heater
