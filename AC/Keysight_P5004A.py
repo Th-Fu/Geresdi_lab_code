@@ -300,6 +300,12 @@ class P5004A(VisaInstrument):
         P5004_lake.close()
         
 #      TODO Add perhaps something as a safety under user interaction when cancelling measurement
+    def read_frequency_data(self):
+        start_f = float(self.start_freq())
+        stop_f = float(self.stop_freq())
+        pts = int(self.npts())
+        frequencies = np.linspace(start_f, stop_f, pts)
+        return frequencies
 
     def measure_S21(self, 
                     start_freq_or_center: float,
@@ -396,13 +402,14 @@ class P5004A(VisaInstrument):
                   filename: str, 
                   temperature: float,
                   added_attenuation = 0,
-                  vflag = False
+                  prefixes_with_values = False
                  ):    
         ''' Path does not end in '\' !!
         made for Windows OS
         
         read in the data, and send it to a file
         Usually comes right after the "measure" function
+        save_path is a string for the file path
         Filename is just the initial prefix - added text is freq, P, T in final filename
         Added attenuation: att. of 20 dB extra is "-20 dB"
         '''
@@ -423,36 +430,40 @@ class P5004A(VisaInstrument):
         self.write("CALCulate1:MEASure:FORM REAL")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
-        sleep(1)
+        sleep(0.5)
         real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
 
+        self.write("*WAI")
         # read in IMAG
         self.write("CALCulate1:MEASure:FORM IMAG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
-        sleep(1)
+        sleep(0.5)
         imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
-        
+        self.write("*WAI")
+
         fullpath = os.path.join(save_path, filename).replace(os.sep, '/')
         # for some nice naming, considering usually we measure in GHz - we round on MHz
         start_f_str = str(round((start_f/1e6)))
         stop_f_str =  str(round((stop_f/1e6)))
         
         # open output file and put data points into the file
-        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns \n frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)'.format( self.power() + added_attenuation, temperature, round(self.if_bandwidth()), self.average_amount(), round(self.electrical_delay()*1e9, 2) )
+        header = 'P = {}dBm \n T = {}mK\n IF_BW = {}Hz, # averages = {}, elec. delay = {} ns \n frequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)'.format(
+            self.power() + added_attenuation, temperature, round(self.if_bandwidth()), self.average_amount(), round(self.electrical_delay()*1e9, 2)
+        )
         
-        if( vflag == True ):
+        if( prefixes_with_values == True ):
             file = open(fullpath + '.csv',"w")
-        if( vflag == False ):
+        else:
             file = open(fullpath + '_' + str(start_f_str) + 'MHz - ' + str(stop_f_str) + 'MHz_P' + str(self.power() + added_attenuation) + 'dBm' + '_T' + str(temperature) + 'mK' + '.csv',"w")       
         file.write(header + '\n')
         
         S21_mag   = 10*np.log10( np.square(real) + np.square(imag))
         S21_phase = np.arctan(np.divide(real,imag)* 180/np.pi)
-        count = 0
-        for i in freq:
+
+        for count,i in enum(freq):
             file.write( str(i) + ',' + str(real[count]) + ',' + str(imag[count]) + ',' + str(S21_mag[count]) + ',' + str(S21_phase[count]) + '\n')
-            count = count + 1
+
         file.close()
         
         # when we save data, we change the plot appearance, 
@@ -460,58 +471,96 @@ class P5004A(VisaInstrument):
         # it also is more intuitive to look at data this way
         self.write("CALC:MEAS:FORM MLOG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
-        
-    def get_data_Vitto(self,
-                        variables_ext = []
-                    ):    
-
-        ##### read in frequency
-        start_f = float(self.start_freq())
-        stop_f = float(self.stop_freq())
-        pts = int(self.npts())
-        freq = np.linspace(start_f, stop_f, pts)
-
-        ##### read in REAL
-            # may look funny because you literally read what's on the screen
-            # I did not manage for now to do it otherwise, but this works... without bugs for now!
-        self.write("CALCulate1:MEASure:FORM REAL")
-        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         self.write("*WAI")
-        sleep(1)
-        real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
 
-        # read in IMAG
-        self.write("CALCulate1:MEASure:FORM IMAG")
-        self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
-        self.write("*WAI")
-        sleep(1)
-        imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
-                
-        S21_mag   = 10*np.log10( np.square(real) + np.square(imag))
-        S21_phase = np.arctan(np.divide(real,imag)* 180/np.pi)
-        count = 0
-        
+
+    def get_data(self, variables_ext=[]):
+        freq = self.read_frequency_data()
+
+        real_data, imag_data = [], []
+        for data_format in ['REAL', 'IMAG']:
+            self.write("CALCulate1:MEASure:FORM {}".format(data_format))
+            self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+            self.write("*WAI")
+            sleep(0.5)
+            values = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+            self.write("*WAI")
+
+            if data_format == 'REAL':
+                real_data = values
+            elif data_format == 'IMAG':
+                imag_data = values
+
+        S21_mag = 10 * np.log10(np.square(real_data) + np.square(imag_data))
+        S21_phase = np.arctan(np.divide(real_data, imag_data) * 180 / np.pi)
+
         data = []
-        
-        if( len( variables_ext ) != 0 ):
-            
-            for i in freq:
-                data.append( str( variables_ext )[ 1: -1] + ' ,' + str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
-                count = count + 1
+        if len(variables_ext) != 0:
+            for i, (f, r, i, mag, phase) in enumerate(zip(freq, real_data, imag_data, S21_mag, S21_phase)):
+                data.append("{}, {}, {}, {}, {}, {}".format(str(variables_ext)[1:-1], f, r, i, mag, phase))
         else:
-        
-            for i in freq:
-                data.append( str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
-                count = count + 1
-        
-        # when we get data, we change the plot appearance, 
-        # so we change it back after data saving!
-        # it also is more intuitive to look at data this way
+            for i, (f, r, i, mag, phase) in enumerate(zip(freq, real_data, imag_data, S21_mag, S21_phase)):
+                data.append("{}, {}, {}, {}, {}".format(f, r, i, mag, phase))
+
         self.write("CALC:MEAS:FORM MLOG")
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
-                
         return data
-        # comment    
+
+    # def get_data(self,
+    #                 variables_ext = []
+    #                 ):
+    #     '''
+    #     :param variables_ext: e.g. if you want to add a magnetic field, temperature (that is constant!) in your lines
+    #     :return: data that is visible on your screen as if you were to save it.
+    #     '''
+    #
+    #     ##### read in frequency
+    #     start_f = float(self.start_freq())
+    #     stop_f = float(self.stop_freq())
+    #     pts = int(self.npts())
+    #     freq = np.linspace(start_f, stop_f, pts)
+    #
+    #     ##### read in REAL
+    #         # may look funny because you literally read what's on the screen
+    #         # I did not manage for now to do it otherwise, but this works... without bugs for now!
+    #     self.write("CALCulate1:MEASure:FORM REAL")
+    #     self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+    #     self.write("*WAI")
+    #     sleep(0.5)
+    #     real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+    #
+    #     self.write("*WAI")
+    #     # read in IMAG
+    #     self.write("CALCulate1:MEASure:FORM IMAG")
+    #     self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+    #     self.write("*WAI")
+    #     sleep(0.5)
+    #     imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+    #     self.write("*WAI")
+    #
+    #     S21_mag   = 10*np.log10( np.square(real) + np.square(imag))
+    #     S21_phase = np.arctan(np.divide(real,imag)* 180/np.pi)
+    #
+    #     data = []
+    #
+    #     if( len( variables_ext ) != 0 ):
+    #
+    #         for count, i in enum(freq):
+    #             data.append( str( variables_ext )[ 1: -1] + ' ,' + str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
+    #             count = count + 1
+    #     else:
+    #
+    #         for count, i in enum(freq):
+    #             data.append( str(i) + ' ,' + str(real[count]) + ' ,' + str(imag[count]) + ' ,' + str(S21_mag[count]) + ' ,' + str(S21_phase[count]) )
+    #             count = count + 1
+    #
+    #     # when we get data, we change the plot appearance,
+    #     # so we change it back after data saving!
+    #     # it also is more intuitive to look at data this way
+    #     self.write("CALC:MEAS:FORM MLOG")
+    #     self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+    #     return data
+
     def powersweep(self, 
                    start_pwr: float, 
                    end_pwr: float, 
@@ -521,7 +570,7 @@ class P5004A(VisaInstrument):
                    type_of_sweep: str,
                    points: int, 
                    if_bandwidth: float,
-                   general_file_path: str, 
+                   folder_file_path: str,
                    filename: str, 
                    temperature: float,
                    live_temperature = False,
@@ -545,15 +594,15 @@ class P5004A(VisaInstrument):
             
         ##### create an array with the values of power for each sweep
         sweeps = np.linspace(start_pwr, end_pwr, amount_of_points)
-        stepsize = sweeps[0] - sweeps[1]
+        #stepsize = sweeps[0] - sweeps[1]
 
         ##### create a new directory for the output to be put into
             # make this whatever you want it to be
         if user_results_folder:
             results_folder = user_results_folder
-            results_pth = general_file_path + results_folder
+            results_pth = folder_file_path + results_folder
         else:
-            results_pth = general_file_path
+            results_pth = folder_file_path
         ##### It should not be a problem that there is already a folder with this name
             # but the user should be told
         try: 
@@ -561,12 +610,11 @@ class P5004A(VisaInstrument):
         except OSError as error: 
             print(error)
             print('\n ... but continuing... \n')
-        sleep(1)
+        sleep(0.5)
         
-        ##### do the stuff
-        itera = 0
-        for power_value in sweeps:
-            # To be changed how this scales! Probably should depend on the IF_bandwidth
+        ##### do the sweep
+        for itera, power_value in enum(sweeps):
+            # TODO: To be changed how this scales! Probably should depend on the IF_bandwidth
             print("Right now, we are measuring the spectrum at {}dBm applied/inferred power. Value {}/{}.".format(power_value + added_attenuation, itera+1, len(sweeps)) )
           
             average = 5.57846902e-05 * power_value ** 4 + 2.22722094e-03 * power_value ** 3 - 4.88449821e-02 * power_value ** 2 - 2.89754544e+00 * power_value - 1.80165131e+01
@@ -588,14 +636,13 @@ class P5004A(VisaInstrument):
             # Note: due to rounding this can be a bit different than expected
             if average < 5:
                 average = 5
-            self.measure_S21(start_freq_or_center, stop_freq_or_span, 
+            self.measure_S21(start_freq_or_center, stop_freq_or_span,
                              points, power_value, average, if_bandwidth, type_of_sweep, el_delay)
                              
             if live_temperature:
                 temperature = P5004_lake.ch06.temperature()
             self.save_data(results_pth, filename, temperature, added_attenuation)
             sleep(0.5)
-            itera += 1
         print("Finished power sweep from {}dBm to {}dBm.".format(start_pwr, end_pwr))
         
         
@@ -658,7 +705,7 @@ class P5004A(VisaInstrument):
             self.measure_S21(start_freq_or_center, stop_freq_or_span, 
                              points, power_value, np.round(average), if_bandwidth, type_of_sweep, el_delay)
                              
-            data.append( self.get_data_Vitto( variables_ext + [ power_value + added_attenuation, np.round(average) ] ) )
+            data.append( self.get_data( variables_ext + [ power_value + added_attenuation, np.round(average) ] ) )
             sleep(0.5)
             itera += 1
         
