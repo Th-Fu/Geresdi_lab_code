@@ -438,10 +438,6 @@ class P5004A(VisaInstrument):
 
         header += "\nFrequency [Hz], S21 (real), S21 (imaginary), S21 (logmag), S21 (phase)"
 
-        if custom_header:
-            custom_header_parts = custom_header.split(",")  # Split the custom header by comma
-            header += "\n" + ", ".join(custom_header_parts)
-
         if prefixes_with_values:
             file = open(fullpath + '.csv', "w")
 
