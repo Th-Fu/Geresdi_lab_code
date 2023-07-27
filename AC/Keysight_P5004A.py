@@ -251,7 +251,10 @@ class P5004A(VisaInstrument):
         VISApath = r'C:\Program Files\IVI Foundation\VISA\Win64\agvisa\agbin\visa32.dll'
         rm = visa.ResourceManager(VISApath)
         self.device_vna = rm.open_resource(address)
-
+        # Query the list of open measurements
+        measurements = self.device_vna.query("CALC:PAR:CAT?")
+        print("Open measurements:", measurements)
+        
         try:
             # Query identification string *IDN?
             self.device_vna.query("*IDN?")
@@ -274,9 +277,7 @@ class P5004A(VisaInstrument):
         except visa.VisaIOError as e:
             print(f"An error occurred: {e}")
 
-        # Query the list of open measurements
-        measurements = self.device_vna.query("CALC:PAR:CAT?")
-        print("Open measurements:", measurements)
+
 
     def connect_lakeshore(self, adress_lakeshore = 'TCPIP::192.168.0.115::7777::SOCKET'):
         '''
