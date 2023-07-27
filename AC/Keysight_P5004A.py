@@ -251,28 +251,28 @@ class P5004A(VisaInstrument):
         VISApath = r'C:\Program Files\IVI Foundation\VISA\Win64\agvisa\agbin\visa32.dll'
         rm = visa.ResourceManager(VISApath)
         self.device_vna = rm.open_resource(address)
-        try:
-            # Query the list of open measurements
-            measurements = self.device_vna.query("CALC:PAR:CAT?")
-            print("Open measurements, start:", measurements)
 
-            # self.device_vna = rm.open_resource('TCPIP0::DHCP2-100217::hislip_PXI10_CHASSIS1_SLOT1_INDEX0::INSTR')
+        try:
             # Query identification string *IDN?
             self.device_vna.query("*IDN?")
             self.device_vna.query("SYST:ERR?")
             self.device_vna.write("*CLS")
 
-            # start fresh/ delete existing measurements
-            self.device_vna.write('CALCulate:PARameter:DELete:ALL')
-            self.device_vna.query("*OPC?")
-            #sleep(0.25)
+            # Query the list of open measurements
+            measurements = self.device_vna.query("CALC:PAR:CAT?")
+            print("Open measurements:", measurements)
 
-            # Create a new measurement 'ch1_S21'
-            #self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
+            # Check if 'ch1_S21' is among the existing measurements
+            if 'ch1_S21' in measurements:
+                # Delete 'ch1_S21' if it's already present
+                self.device_vna.write(f"CALC:PAR:DEL 'ch1_S21'")
+                self.device_vna.query("*OPC?")
 
-            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")  # Corrected the syntax here
+            # Add a new measurement 'ch1_S21'
+            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
             self.device_vna.query("*OPC?")
             self.device_vna.write("DISP:MEAS:FEED 1")
+
             print("Startup finished")
 
         except visa.VisaIOError as e:
