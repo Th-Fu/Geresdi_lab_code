@@ -262,10 +262,6 @@ class P5004A(VisaInstrument):
             measurements = self.device_vna.query("CALC:PAR:CAT?")
             print("Open measurements:", measurements)
 
-            # Add a new measurement 'ch1_S21'
-            self.device_vna.write("CALC:PAR:EXT 'ch1_S21_1', 'S21'")
-            self.device_vna.query("*OPC?")
-
             # Delete the initial measurements 'CH1_S11_1' and 'S11' if they are present
             if 'CH1_S11_1' in measurements:
                 self.device_vna.write(f"CALC:PAR:DEL 'CH1_S11_1'")
@@ -275,10 +271,9 @@ class P5004A(VisaInstrument):
             measurements = self.device_vna.query("CALC:PAR:CAT?")
             print("Open measurements:", measurements)
 
-            if 'S11' in measurements:
-                self.device_vna.write(f"CALC:PAR:DEL 'S11'")
-                self.device_vna.query("*OPC?")
-
+            # Add a new measurement 'ch1_S21'
+            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
+            self.device_vna.query("*OPC?")
 
             self.device_vna.write("DISP:MEAS:FEED 1")
 
