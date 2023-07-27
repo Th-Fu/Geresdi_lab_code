@@ -258,23 +258,15 @@ class P5004A(VisaInstrument):
             self.device_vna.query("SYST:ERR?")
             self.device_vna.write("*CLS")
 
-            # Query the list of open measurements
-            measurements = self.device_vna.query("CALC:PAR:CAT?")
-            print("Open measurements:", measurements)
 
-            # Delete the initial measurements 'CH1_S11_1' and 'S11' if they are present
+            # Delete the initial measurement 'CH1_S11_1' if it is present
             if 'CH1_S11_1' in measurements:
                 self.device_vna.write(f"CALC:PAR:DEL 'CH1_S11_1'")
                 self.device_vna.query("*OPC?")
 
-            # Query the list of open measurements
-            measurements = self.device_vna.query("CALC:PAR:CAT?")
-            print("Open measurements:", measurements)
-
             # Add a new measurement 'ch1_S21'
             self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
             self.device_vna.query("*OPC?")
-
             self.device_vna.write("DISP:MEAS:FEED 1")
 
             print("Startup finished")
@@ -284,19 +276,28 @@ class P5004A(VisaInstrument):
 
         # Query the list of open measurements
         measurements = self.device_vna.query("CALC:PAR:CAT?")
-        print("Open measurements, end:", measurements)
+        print("Open measurements:", measurements)
 
-    def connect_lakeshore(self):
-        P5004_lake = Model_372('lakeshore_372_P5004', 'TCPIP::192.168.0.115::7777::SOCKET')
+    def connect_lakeshore(self, adress_lakeshore = 'TCPIP::192.168.0.115::7777::SOCKET'):
+        '''
+        If one needs to add lakeshore compatibility to a function (e.g. power sweep), loading this function first is a must.
+        this can be done in conjunction with loading the lakeshore 'outside'
+        DO NOT FORGET to disconnect after you are done!
+        '''
+
+        P5004_lake = Model_372('lakeshore_372_P5004', adress = adress_lakeshore)
         P5004_heater = P5004_lake.sample_heater
         self.P5004_lake = P5004_lake
         self.P5004_heater =  P5004_heater
         
     def disconnect_lakeshore(self):
+        '''
+        If one loaded the lakeshore, it is important to disconnect, or you are in a boatload of sh*t
+        '''
         P5004_lake = self.P5004_lake
         P5004_lake.close()
         
-#      Add perhaps something as a safety under user interaction when cancelling measurement
+#      TODO Add perhaps something as a safety under user interaction when cancelling measurement
 
     def measure_S21(self, 
                     start_freq_or_center: float,
@@ -317,8 +318,8 @@ class P5004A(VisaInstrument):
 
         ##### make sure the window is on
         self.device_vna.write("DISPlay:WINDow1:STATE ON")
-        sleep(0.5)
-         ##### we name the measurement and make sure it's a S21 measurement
+        sleep(0.1)
+        ##### we name the measurement and make sure it's a S21 measurement
                     # for some reason here we need to use directly talk to the VNA in stead of below, where
                     # it is not necessary. Super weird.. Maybe has to do with the query?
                     # wasn't worth it to check out
@@ -369,15 +370,14 @@ class P5004A(VisaInstrument):
         average = round(average//1)
         self.write('SENSe1:AVERage:COUnt {}'.format(average))
         
-                ##### start the measurement by starting the averaging
+        ##### start the measurement by starting the averaging
         self.write('SENSe1:AVERage:STATe ON')
-        
-        
-        ##### Wait until the measurement is done. 
-        sleep(2.0) # cannot queue measurements without this badboy here, somehow
+
+        ##### Wait until the measurement is done.
+        sleep(1.0) # cannot queue measurements without this badboy here, somehow (sleep 2 orig.)
         self.write("*WAI")
         
-            # we check here the status of the averaging every 5 seconds
+        # we check here the status of the averaging every 5 seconds
         sleepcounter = 0
         while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
             sleep(2.5)
@@ -385,9 +385,7 @@ class P5004A(VisaInstrument):
             # Let us not average/ rescale too often
             if not sleepcounter % 25:
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
-            
-        cnt = 0
-        sleep(1.0)
+        sleep(0.5)
 
    
     def save_data(self, 
