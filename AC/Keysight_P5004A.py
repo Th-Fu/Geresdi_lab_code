@@ -360,8 +360,9 @@ class P5004A(VisaInstrument):
         self.write('SOUR:POW1 {}'.format(power))
         self.write('SENSe1:SWEep:TIME:AUTO ON') # usually best to have this on
         self.output('on')
-        sleep(0.5) # give some time for the command queue to clear
-            #If you are looking at the VNAnalyser, then autoscale is always nice
+        self.write("*WAI")
+        #sleep(0.5) # give some time for the command queue to clear
+        #    #If you are looking at the VNAnalyser, then autoscale is always nice
         self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
         
             #averaging should always be > 0, and a natural number at that
@@ -380,8 +381,8 @@ class P5004A(VisaInstrument):
         # we check here the status of the averaging every 5 seconds
         sleepcounter = 0
         while self.device_vna.query("STAT:OPER:AVER1:COND?") == '+0\n':
-            sleep(2.5)
-            sleepcounter += 2.5
+            sleep(0.5)
+            sleepcounter += 0.5
             # Let us not average/ rescale too often
             if not sleepcounter % 25:
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
