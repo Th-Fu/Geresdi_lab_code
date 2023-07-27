@@ -254,7 +254,7 @@ class P5004A(VisaInstrument):
         # Query the list of open measurements
         measurements = self.device_vna.query("CALC:PAR:CAT?")
         print("Open measurements:", measurements)
-        
+
         try:
             # Query identification string *IDN?
             self.device_vna.query("*IDN?")
@@ -267,10 +267,11 @@ class P5004A(VisaInstrument):
                 self.device_vna.write(f"CALC:PAR:DEL 'CH1_S11_1'")
                 self.device_vna.query("*OPC?")
 
-            # Add a new measurement 'ch1_S21'
-            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
-            self.device_vna.query("*OPC?")
-            self.device_vna.write("DISP:MEAS:FEED 1")
+            if not 'ch1_S21' in measurements:
+                # Add a new measurement 'ch1_S21'
+                self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
+                self.device_vna.query("*OPC?")
+                self.device_vna.write("DISP:MEAS:FEED 1")
 
             print("Startup finished")
 
