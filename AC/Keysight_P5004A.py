@@ -265,11 +265,12 @@ class P5004A(VisaInstrument):
             # start fresh/ delete existing measurements
             self.device_vna.write('CALCulate:PARameter:DELete:ALL')
             self.device_vna.query("*OPC?")
-            sleep(0.25)
+            #sleep(0.25)
 
             # Create a new measurement 'ch1_S21'
             #self.device_vna.write("CALC:PAR:EXT "'ch1_S21'", 'S21'")
-            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")
+
+            self.device_vna.write("CALC:PAR:EXT 'ch1_S21', 'S21'")  # Corrected the syntax here
             self.device_vna.query("*OPC?")
             self.device_vna.write("DISP:MEAS:FEED 1")
             print("Startup finished")
