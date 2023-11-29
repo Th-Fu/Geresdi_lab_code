@@ -743,11 +743,9 @@ class P5004A(VisaInstrument):
                   ):
         '''
         Eldelay in ns, standard value is on inclusive room T amplifiers
-        added_attenuation: if you added 20 db Att, then this is "-20"
+
         '''
         self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
-        BW = round(self.if_bandwidth())
-        ED = round(self.electrical_delay()*1e9, 2)
         ## starting stuff 
         self.write("CALC:MEAS:FORM UPHase")
         self.write('SENSe1:AVERage:STATe OFF')
@@ -757,6 +755,9 @@ class P5004A(VisaInstrument):
         self.write(f"SENS:SWE:POIN {points}")
         self.write(f'SENSe1:BANDwidth {if_bandwidth}')
         self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
 
         # reset at end
         self.write("TRIGger:SOURce MANual")
@@ -772,7 +773,7 @@ class P5004A(VisaInstrument):
                 self.write("CALC:MEAS:FORM UPHase")
                 self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
                 self.write(f'SOUR:POW1 {power_v}')
-                # sleep(0.5)
+                sleep(0.5)
                 
                 self.write("INITiate:IMM")
                 #sleep(1) # cannot queue measurements without this badboy here, somehow
@@ -786,14 +787,88 @@ class P5004A(VisaInstrument):
                 self.write("CALCulate1:MEASure:FORM REAL")
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
                 self.write("*WAI")
-                # sleep(1)
+                sleep(1)
                 real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
 
                 # read in IMAG
                 self.write("CALCulate1:MEASure:FORM IMAG")
                 self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
                 self.write("*WAI")
-                # sleep(1)
+                sleep(1)
+                imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                up.append( np.mean( phaseU ) )
+                re.append( np.mean( real ) )
+                im.append( np.mean( imag ) )
+                uperr.append( np.std( phaseU ) )
+                reerr.append( np.std( real ) )
+                imerr.append( np.std( imag ) )                
+            return up, re, im, uperr, reerr, imerr
+
+
+
+    def CW_measurement_UWphase_Vitto_2(self, 
+                   points: int,
+                   center_frequency: float,
+                   power_list: list,
+                   times_list: list,
+                   if_bandwidth: float,
+                   el_delay = 60.974
+                  ):
+        '''
+        Eldelay in ns, standard value is on inclusive room T amplifiers
+        added_attenuation: if you added 20 db Att, then this is "-20"
+        '''
+        
+        self.write('CALCulate1:CORRection:EDELay:TIME {}NS'.format(el_delay))
+        BW = round(self.if_bandwidth())
+        ED = round(self.electrical_delay()*1e9, 2)
+        ## starting stuff 
+        self.write("CALC:MEAS:FORM UPHase")
+        self.write('SENSe1:AVERage:STATe OFF')
+        self.write("SENS:SWE:TYPE CW")
+                
+        self.write(f"SENSe1:FREQuency:CENTer {center_frequency}")
+        self.write(f"SENS:SWE:POIN {points}")
+        self.write(f'SENSe1:BANDwidth {if_bandwidth}')
+        self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+       
+        # reset at end
+        self.write("TRIGger:SOURce MANual")
+        self.write('SENSe1:SWEep:TIME:AUTO OFF')
+        for time_v in times_list:
+            self.write(f'SENS:SWE:TIME {time_v}')
+            times = np.linspace(0, time_v, points)
+            
+            up, re, im, uperr, reerr, imerr = [], [], [], [], [], []
+            
+            for power_v in power_list:
+                
+                self.write("CALC:MEAS:FORM UPHase")
+                self.write('DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO')
+                self.write(f'SOUR:POW1 {power_v}')
+                sleep(0.5)
+                
+                self.write("INITiate:IMM")
+                #sleep(1) # cannot queue measurements without this badboy here, somehow
+                self.device_vna.query("*OPC?")
+                sleep(time_v)
+                phaseU = self.device_vna.query_ascii_values("CALC:MEAS:DATA:FDATA?")
+
+                ##### read in REAL
+                    # may look funny because you literally read what's on the screen
+                    # I did not manage for now to do it otherwise, but this works... without bugs for now!
+                self.write("CALCulate1:MEASure:FORM REAL")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                sleep(0.5)
+                real = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
+
+                # read in IMAG
+                self.write("CALCulate1:MEASure:FORM IMAG")
+                self.write("DISPlay:WINDow1:TRACe1:Y:SCALe:AUTO")
+                self.write("*WAI")
+                sleep(0.5)
                 imag = self.device_vna.query_ascii_values("CALC:MEAS1:DATA:FDATA?")
 
                 up.append( np.mean( phaseU ) )
@@ -875,6 +950,7 @@ class P5004A(VisaInstrument):
                 reerr.append( np.std( real ) )
                 imerr.append( np.std( imag ) )                
             return up, re, im, uperr, reerr, imerr
+
 
     def CW_measurement_UWphase_Vitto_avg(self, 
                    points: int,
