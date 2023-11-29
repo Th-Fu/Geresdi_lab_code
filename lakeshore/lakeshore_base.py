@@ -447,8 +447,7 @@ def wait_until_set_point_reached_forced(
                 time_enter_tolerance_zone = time_now
 
             time.sleep(wait_cycle_time)
-            print(f" time now = {time_now}\n wait_cycle_time = {wait_cycle_time} \n setpoint = {t_setpoint} \n
-            tolerance = {wait_tolerance} with treading - tsetpoint/treading = {abs(t_reading - t_setpoint) / t_reading} \n wait_equib time = {wait_equilibration_time}")
+            print(f" time now = {time_now}\n wait_cycle_time = {wait_cycle_time} \n setpoint = {t_setpoint} \ntolerance = {wait_tolerance} with treading - tsetpoint/treading = {abs(t_reading - t_setpoint) / t_reading} \n wait_equib time = {wait_equilibration_time}")
             
             
 
