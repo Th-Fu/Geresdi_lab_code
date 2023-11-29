@@ -49,7 +49,7 @@ class plotting(object):
 #       plotallfig.suptitle("Raw data/ fit plot")
 #       plt.show()
 
-    def plotall(self, title= ''):
+    def plotall(self, title= '', fontsize_user = 12):
         #print(self.z_data_raw)
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
@@ -57,63 +57,76 @@ class plotting(object):
         imag2 = self.z_data_sim.imag
         plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
         plt.subplot(221)
-        plt.suptitle(title)
+        plt.suptitle(title, fontsize = fontsize_user)
         plt.plot(real,imag,label='raw data')
         plt.plot(real2,imag2,label='fit')
-        plt.xlabel('Re(S21)')
-        plt.ylabel('Im(S21)')
-        plt.legend()
+        plt.xlabel('Re(S21)', fontsize = fontsize_user)
+        plt.ylabel('Im(S21)', fontsize = fontsize_user)
+        plt.legend(fontsize = fontsize_user)
         plt.subplot(222)
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='fit')
-        plt.xlabel('f (GHz)')
-        plt.ylabel('|S21|')
-        plt.legend()
+        plt.xlabel('f (GHz)', fontsize = fontsize_user)
+        plt.ylabel('|S21|', fontsize = fontsize_user)
+        plt.legend(fontsize = fontsize_user)
         plt.subplot(223)
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_sim),label='fit')
-        plt.xlabel('f (GHz)')
-        plt.ylabel('arg(|S21|)')
-        plt.legend()
+        plt.xlabel('f (GHz)', fontsize = fontsize_user)
+        plt.ylabel('arg(|S21', fontsize = fontsize_user)
+        plt.legend( fontsize = fontsize_user)
         plt.subplot(224)
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_raw)),label='raw data')
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_sim)),label='fit')
-        plt.xlabel('f (GHz)')
-        plt.ylabel('Unwrapped arg(|S21|)')
-        plt.legend()
+        plt.xlabel('f (GHz)', fontsize = fontsize_user)
+        plt.ylabel('Unwrapped arg(|S21|)', fontsize = fontsize_user)
+        plt.legend( fontsize = fontsize_user)
+        
+        plt.tight_layout()
         plt.show()
         plt.tight_layout()
         
-    def plotfit(self, title= '', location = 'best'):
+    def plotfit(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21'):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='Experiment', color = 'tab:blue')
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='Fit', color = 'tab:green')
-        plt.xlabel('f (GHz)')
-        plt.ylabel('|S21|')
-        plt.legend(loc = location)
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='Fit', color = color_fit)
+        plt.xlabel('f (GHz)', fontsize = fontsize_user)
+        if S21_or_S11 == 'S21':
+            plt.ylabel(r'|S$_{21}$|', fontsize = fontsize_user)
+        else:
+            plt.ylabel(r'|S$_{11}$|', fontsize = fontsize_user)
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
+        plt.legend(loc = location, fontsize = fontsize_user)
         #plt.title("Magnitude fit")
         plt.title(title)
         plt.tight_layout()
         plt.show()
 
-    def plotfitcircle(self, title= '', location = 'best'):
+    def plotfitcircle(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21'):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
         plt.plot(real,imag,label='Experiment', color = 'tab:blue')
-        plt.plot(real2,imag2,label='Fit', color = 'tab:green')
-        plt.xlabel('Re(S21)')
-        plt.ylabel('Im(S21)')
-        plt.legend(loc = location)
+        plt.plot(real2,imag2,label='Fit', color = color_fit)
+        if S21_or_S11 == 'S21':
+            plt.xlabel('Re(S$_{21}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{21}$)', fontsize = fontsize_user)
+        else:
+            plt.xlabel('Re(S$_{11}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{11}$)', fontsize = fontsize_user)
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
+        plt.legend(loc = location, fontsize = fontsize_user)
         plt.title(title)
         plt.tight_layout()
         plt.show()
 
-    def plotcalibrateddata(self):
+    def plotcalibrateddata(self, fontsize_user = 12):
         real = self.z_data.real
         imag = self.z_data.imag
         plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.3)
@@ -122,16 +135,23 @@ class plotting(object):
         plt.xlabel('Re(S21)')
         plt.ylabel('Im(S21)')
         plt.legend()
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
         plt.subplot(222)
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data),label='calib')
         plt.xlabel('f (GHz)')
         plt.ylabel('|S21|')
         plt.legend()
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
         plt.subplot(223)
         plt.plot(self.f_data*1e-9,np.angle(self.z_data),label='calib')
         plt.xlabel('f (GHz)')
         plt.ylabel('arg(|S21|)')
         plt.legend()
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
+        plt.tight_layout()
         plt.show()
         
     def plotrawdata(self):
@@ -153,6 +173,7 @@ class plotting(object):
         plt.xlabel('f (GHz)')
         plt.ylabel('arg(|S21|)')
         plt.legend()
+        plt.tight_layout()
         plt.show()
         
     def plot_fine(self, value_low, value_high):
@@ -193,6 +214,8 @@ class plotting(object):
         plt.xlim(value_low*1e-3, value_high*1e-3)
         plt.ylabel('arg(|S21|)')
         plt.legend()
+        
+        plt.tight_layout()
         plt.show()
 
 class save_load(object):
