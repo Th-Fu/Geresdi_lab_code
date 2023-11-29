@@ -1,7 +1,9 @@
 from typing import Dict, ClassVar, Any
 
-from qcodes.instrument_drivers.Lakeshore.lakeshore_base import (
+from Geresdi_lab_code.lakeshore.lakeshore_base import (
     LakeshoreBase, BaseOutput, BaseSensorChannel)
+# from qcodes.instrument_drivers.Lakeshore.lakeshore_base import (
+#     LakeshoreBase, BaseOutput, BaseSensorChannel)
 from qcodes.instrument.group_parameter import GroupParameter, Group
 import qcodes.utils.validators as vals
 
