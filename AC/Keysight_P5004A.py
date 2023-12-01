@@ -280,14 +280,14 @@ class P5004A(VisaInstrument):
 
 
 
-    def connect_lakeshore(self, adress_lakeshore = 'TCPIP::192.168.0.115::7777::SOCKET'):
+    def connect_lakeshore(self, address_lakeshore = 'TCPIP::192.168.0.115::7777::SOCKET'):
         '''
         If one needs to add lakeshore compatibility to a function (e.g. power sweep), loading this function first is a must.
         this can be done in conjunction with loading the lakeshore 'outside'
         DO NOT FORGET to disconnect after you are done!
         '''
 
-        P5004_lake = Model_372('lakeshore_372_P5004', adress = adress_lakeshore)
+        P5004_lake = Model_372('lakeshore_372_P5004', address = address_lakeshore)
         P5004_heater = P5004_lake.sample_heater
         self.P5004_lake = P5004_lake
         self.P5004_heater =  P5004_heater
