@@ -86,7 +86,7 @@ class plotting(object):
         plt.show()
         plt.tight_layout()
         
-    def plotfit(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21'):
+    def plotfit(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21', max_xticks = 0, max_yticks = 0):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
@@ -103,10 +103,14 @@ class plotting(object):
         plt.legend(loc = location, fontsize = fontsize_user)
         #plt.title("Magnitude fit")
         plt.title(title)
+        if max_xticks:
+            plt.locator_params(axis='x', nbins=max_xticks)
+        if max_ybins:
+            plt.locator_params(axis='y', nbins=max_yticks)
         plt.tight_layout()
         plt.show()
 
-    def plotfitcircle(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21'):
+    def plotfitcircle(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', S21_or_S11 = 'S21', max_xticks = 0, max_yticks = 0):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
@@ -123,6 +127,11 @@ class plotting(object):
         plt.yticks(fontsize= fontsize_user)
         plt.legend(loc = location, fontsize = fontsize_user)
         plt.title(title)
+        if max_xbins:
+            plt.locator_params(axis='x', nbins=max_xticks)
+        if max_ybins:
+            plt.locator_params(axis='y', nbins=max_yticks)
+
         plt.tight_layout()
         plt.show()
 
