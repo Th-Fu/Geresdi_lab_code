@@ -18,7 +18,7 @@ class circlefit(object):
     
     def _dist(self,x):
         np.absolute(x,x)
-        c = (x > np.pi).astype(np.int)
+        c = (x > np.pi).astype(int)
         return x+c*(-2.*x+2.*np.pi)  
         
     def _periodic_boundary(self,x,bound):
@@ -57,6 +57,7 @@ class circlefit(object):
             err = self._dist(y - (theta0+2.*np.arctan(2.*Ql*(1.-x/fr))))
             return err
         p0 = [theta0, fr]
+        
         p_final = spopt.leastsq(lambda a,b,c: residuals_1(a,b,c,Ql),p0,args=(f_data,phase))#,ftol=1e-12,xtol=1e-12)
         theta0, fr = p_final[0]
         p0 = [Ql, fr]
@@ -64,10 +65,11 @@ class circlefit(object):
         Ql, fr = p_final[0]
         p0 = fr
         p_final = spopt.leastsq(lambda a,b,c: residuals_3(a,b,c,theta0,Ql),p0,args=(f_data,phase))#,ftol=1e-12,xtol=1e-12)
-        fr = p_final[0]
+        fr = p_final[0][0]   # added a zero here since it was listing
         p0 = Ql
         p_final = spopt.leastsq(lambda a,b,c: residuals_4(a,b,c,theta0,fr),p0,args=(f_data,phase))#,ftol=1e-12,xtol=1e-12)
-        Ql = p_final[0]
+        Ql = p_final[0][0] # added a zero here since it was listing
+        print(theta0, Ql, fr) # print statement to find the error ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (3,) + inhomogeneous part.
         p0 = np.array([theta0, Ql, fr], dtype='float64') 
         p_final = spopt.leastsq(residuals_5,p0,args=(f_data,phase))
         return p_final[0]
