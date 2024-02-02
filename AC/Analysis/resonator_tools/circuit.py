@@ -101,12 +101,12 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
         delay, params = self.get_delay(f_data, z_data, ignoreslope=ignoreslope, guess=guessdelay, delay=fixed_delay)
         z_data = (z_data - params[1] * (f_data - params[4])) * np.exp(2. * 1j * np.pi * delay * f_data)
         xc, yc, r0 = self._fit_circle(z_data)
-        zc = np.complex(xc, yc)
+        zc = complex(xc, yc)
 
         fitparams = self._phase_fit(f_data, self._center(z_data, zc), 0., np.absolute(params[5]), params[4])
         theta, Ql, fr = fitparams
         beta = self._periodic_boundary(theta + np.pi, np.pi)  ###
-        offrespoint = np.complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
+        offrespoint = complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
 
         alpha = self._periodic_boundary(np.angle(offrespoint) + np.pi, np.pi)
         # a = np.absolute(offrespoint)
@@ -132,7 +132,7 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
         xc, yc, r0 = self._fit_circle(z_data, refine_results=refine_results)
         phi0 = -np.arcsin(yc / r0)
         theta0 = self._periodic_boundary(phi0 + np.pi, np.pi)
-        z_data_corr = self._center(z_data, np.complex(xc, yc))
+        z_data_corr = self._center(z_data, complex(xc, yc))
         theta0, Ql, fr = self._phase_fit(f_data, z_data_corr, theta0, Ql, fr)
         # print("Ql from phasefit is: " + str(Ql))
         Qi = Ql / (1. - r0)
@@ -209,7 +209,7 @@ class reflection_port_original(circlefit, save_load, plotting, calibration):
         '''
         full model for notch type resonances
         '''
-        return a * np.exp(np.complex(0, alpha)) * np.exp(-2j * np.pi * f * delay) * (
+        return a * np.exp(complex(0, alpha)) * np.exp(-2j * np.pi * f * delay) * (
                     2. * Ql / Qc - 1. + 2j * Ql * (fr - f) / fr) / (1. - 2j * Ql * (fr - f) / fr)
 
 
@@ -477,13 +477,13 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
 
         z_data = (z_data - params[1] * (f_data - params[4])) * np.exp(2. * 1j * np.pi * delay * f_data)
         xc, yc, r0 = self._fit_circle(z_data)
-        zc = np.complex(xc, yc)
+        zc = complex(xc, yc)
 
         fitparams = self._phase_fit(f_data, self._center(z_data, zc), 0., np.absolute(params[5]), params[4])
         theta, Ql, fr = fitparams
         beta = self._periodic_boundary(theta + np.pi, np.pi)  ###
         #print(f'beta2 = {beta}, xc = {xc}, yc = {yc}')
-        offrespoint = np.complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
+        offrespoint = complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
         alpha = self._periodic_boundary(np.angle(offrespoint) + np.pi, np.pi)
         #print(f"offresspoint2 = {offrespoint}")
         # print(f"alpha = {alpha}")
@@ -511,12 +511,12 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         #print(f'delay = {delay}')
         z_data = (z_data - params[1] * (f_data - params[4])) * np.exp(2. * 1j * np.pi * delay * f_data)
         xc, yc, r0 = self._fit_circle(z_data)
-        zc = np.complex(xc, yc)
+        zc = complex(xc, yc)
 
         fitparams = self._phase_fit(f_data, self._center(z_data, zc), 0., np.absolute(params[5]), params[4])
         theta = fitparams[0]
         beta = self._periodic_boundary(theta + np.pi, np.pi)  ###
-        offrespoint = np.complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
+        offrespoint = complex((xc + r0 * np.cos(beta)), (yc + r0 * np.sin(beta)))
         #print(offrespoint)
         alpha = self._periodic_boundary(np.angle(offrespoint) + np.pi, np.pi)
         return delay, alpha
@@ -550,7 +550,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
             self.phi = phi0
         #theta0 = self._periodic_boundary(-phi0 + np.pi, np.pi)
         theta0 = self._periodic_boundary(-phi0 + np.pi, np.pi)
-        z_data_corr = self._center(z_data, np.complex(xc, yc))
+        z_data_corr = self._center(z_data, complex(xc, yc))
         theta0, Ql, fr = self._phase_fit(f_data, z_data_corr, theta0, Ql, fr)
         # print("Ql from phasefit is: " + str(Ql))
         if fit_type == 'DCM':
@@ -558,7 +558,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
             #Qi = Ql / (1. - r0)
             #Qc = 1. / (1. / Ql - 1. / Qi)
             Qc = Ql / (r0)
-            Qc_complex = Qc * np.exp(np.complex(0, phi0))
+            Qc_complex = Qc * np.exp(complex(0, phi0))
             #print(1/Qc)
             #print(1/Qc_complex)
             Qi = 1. / (1. / Ql - 1. / Qc)
@@ -664,7 +664,7 @@ class reflection_port_phi(circlefit, save_load, plotting, calibration):
         return a * np.exp(1j * (alpha - 2 * np.pi * f * delay)) * (
                 1. - 2. * Ql / (complexQc * 1 * (1. + 2j * Ql * (f / fr - 1.)))
         )
-        # return a*np.exp(np.complex(0,alpha))*np.exp(-2j*np.pi*f*delay) * ( 2.*Ql/complexQc - 1. + 2j*Ql*(fr-f)/fr ) / ( 1. - 2j*Ql*(fr-f)/fr )
+        # return a*np.exp(complex(0,alpha))*np.exp(-2j*np.pi*f*delay) * ( 2.*Ql/complexQc - 1. + 2j*Ql*(fr-f)/fr ) / ( 1. - 2j*Ql*(fr-f)/fr )
 
     def get_single_photon_limit(self, unit='dBm'):
         '''
