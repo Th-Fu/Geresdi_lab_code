@@ -18,6 +18,8 @@ def dBm2Watt(x):
 class plotting(object):
     '''
     some helper functions for plotting
+    Normalisation can be achieved by: 
+        S21_vect_norm = np.vectorize(complex)(S21_real, S21_imag)/resonator.fitresults["a"]
     '''
 ##
 ## z_data_raw denotes the raw data
@@ -49,7 +51,7 @@ class plotting(object):
 #       plotallfig.suptitle("Raw data/ fit plot")
 #       plt.show()
 
-    def plotall(self, title= ''):
+    def plotall(self, title= '', S21_or_S11 = 'S21', fontsize_user = 12):
         #print(self.z_data_raw)
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
@@ -60,51 +62,90 @@ class plotting(object):
         plt.suptitle(title)
         plt.plot(real,imag,label='raw data')
         plt.plot(real2,imag2,label='fit')
-        plt.xlabel('Re(S21)')
-        plt.ylabel('Im(S21)')
+        if S21_or_S11 == 'S21':
+            plt.xlabel('Re(S$_{21}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{21}$)', fontsize = fontsize_user)
+        else:
+            plt.xlabel('Re(S$_{11}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{11}$)', fontsize = fontsize_user)
         plt.legend()
         plt.subplot(222)
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='fit')
         plt.xlabel('f (GHz)')
-        plt.ylabel('|S21|')
+        if S21_or_S11 == 'S21':
+            plt.ylabel(r'|S$_{21}$|', fontsize = fontsize_user)
+        else:
+            plt.ylabel(r'|S$_{11}$|', fontsize = fontsize_user)
         plt.legend()
         plt.subplot(223)
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_raw),label='raw data')
         plt.plot(self.f_data*1e-9,np.angle(self.z_data_sim),label='fit')
         plt.xlabel('f (GHz)')
-        plt.ylabel('arg(|S21|)')
+        if S21_or_S11 == 'S21':
+            plt.ylabel(r'arg(|S$_{21}$|)', fontsize = fontsize_user)
+        else:
+            plt.ylabel(r'arg(|S$_{11}$|)', fontsize = fontsize_user)
         plt.legend()
         plt.subplot(224)
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_raw)),label='raw data')
         plt.plot(self.f_data*1e-9,np.unwrap(np.angle(self.z_data_sim)),label='fit')
         plt.xlabel('f (GHz)')
-        plt.ylabel('Unwrapped arg(|S21|)')
+        if S21_or_S11 == 'S21':
+            plt.ylabel(r'Unwrapped arg(|S$_{21}$|)', fontsize = fontsize_user)
+        else:
+            plt.ylabel(r'Unwrapped arg(|S$_{11}$|)', fontsize = fontsize_user)
         plt.legend()
         plt.show()
         plt.tight_layout()
         
-    def plotfit(self, title= '', location = 'best'):
+        
+        
+    def plotfit(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', linestyle_fit ='-', S21_or_S11 = 'S21', max_xticks = 0, max_yticks = 0):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
         plt.plot(self.f_data*1e-9,np.absolute(self.z_data_raw),label='Experiment', color = 'tab:blue')
-        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='Fit', color = 'tab:green')
-        plt.xlabel('f (GHz)')
-        plt.ylabel('|S21|')
-        plt.legend(loc = location)
+        plt.plot(self.f_data*1e-9,np.absolute(self.z_data_sim),label='Fit', color = color_fit, linestyle = linestyle_fit)
+        plt.xlabel('f (GHz)', fontsize = fontsize_user)
+        if S21_or_S11 == 'S21':
+            plt.ylabel(r'|S$_{21}$|', fontsize = fontsize_user)
+        else:
+            plt.ylabel(r'|S$_{11}$|', fontsize = fontsize_user)
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
+        plt.legend(loc = location, fontsize = fontsize_user)
         #plt.title("Magnitude fit")
         plt.title(title)
+        if max_xticks:
+            plt.locator_params(axis='x', nbins=max_xticks)
+        if max_yticks:
+            plt.locator_params(axis='y', nbins=max_yticks)
         plt.tight_layout()
         plt.show()
 
-    def plotfitcircle(self, title= '', location = 'best'):
+    def plotfitcircle(self, title= '', location = 'best', fontsize_user = 12, color_fit = 'g', linestyle_fit ='-', S21_or_S11 = 'S21', max_xticks = 0, max_yticks = 0):
         real = self.z_data_raw.real
         imag = self.z_data_raw.imag
         real2 = self.z_data_sim.real
         imag2 = self.z_data_sim.imag
         plt.plot(real,imag,label='Experiment', color = 'tab:blue')
+        plt.plot(real2,imag2,label='Fit', color = color_fit, linestyle = linestyle_fit)
+        if S21_or_S11 == 'S21':
+            plt.xlabel('Re(S$_{21}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{21}$)', fontsize = fontsize_user)
+        else:
+            plt.xlabel('Re(S$_{11}$)', fontsize = fontsize_user)
+            plt.ylabel('Im(S$_{11}$)', fontsize = fontsize_user)
+        plt.xticks(fontsize= fontsize_user)
+        plt.yticks(fontsize= fontsize_user)
+        plt.legend(loc = location, fontsize = fontsize_user)
+        plt.title(title)
+        if max_xticks:
+            plt.locator_params(axis='x', nbins=max_xticks)
+        if max_yticks:
+            plt.locator_params(axis='y', nbins=max_yticks)
         plt.plot(real2,imag2,label='Fit', color = 'tab:green')
         plt.xlabel('Re(S21)')
         plt.ylabel('Im(S21)')
@@ -112,6 +153,7 @@ class plotting(object):
         plt.title(title)
         plt.tight_layout()
         plt.show()
+
 
     def plotcalibrateddata(self):
         real = self.z_data.real
